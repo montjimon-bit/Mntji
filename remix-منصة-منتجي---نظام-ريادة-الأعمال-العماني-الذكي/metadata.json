@@ -1,8 +1,0 @@
-{
-  "name": "Remix منصة منتجي - نظام ريادة الأعمال العماني الذكي",
-  "description": "المنصة الوطنية المتكاملة لتمكين رواد الأعمال وأصحاب المشاريع العمانية، مستشار الذكاء الاصطناعي لدراسات الجدوى وسوق تجاري عماني شامل.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
