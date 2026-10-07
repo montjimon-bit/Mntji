@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in Montaji platform",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["admin", "entrepreneur", "customer"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "crNumber": { "type": "string", "maxLength": 50 },
+        "hasRiyadaCard": { "type": "boolean" },
+        "governorate": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product listed on the Omani marketplace",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "price": { "type": "number" },
+        "category": { "type": "string", "maxLength": 100 },
+        "governorate": { "type": "string", "maxLength": 100 },
+        "sellerName": { "type": "string", "maxLength": 150 },
+        "sellerId": { "type": "string" },
+        "isRiyadaCertified": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "image": { "type": "string", "maxLength": 500 },
+        "stock": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "price", "category", "governorate", "stock"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order in Montaji platform",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string", "maxLength": 50 },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "governorate": { "type": "string", "maxLength": 100 },
+        "wilayat": { "type": "string", "maxLength": 100 },
+        "address": { "type": "string", "maxLength": 500 },
+        "paymentMethod": { "type": "string", "enum": ["bank_muscat", "thawani", "card", "cod"] },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "shippingFee": { "type": "number" },
+        "tax": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["تم الاستلام", "قيد التجهيز", "قيد التوصيل", "تم التسليم"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orderNumber", "userId", "customerName", "phone", "total", "status"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Admin privilege marker",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "assignedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Saved favorite product item in user wishlist",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId"]
+    },
+    "ProductReview": {
+      "title": "ProductReview",
+      "description": "Customer review and rating for a product",
+      "type": "object",
+      "properties": {
+        "reviewId": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string", "maxLength": 100 },
+        "userPhoto": { "type": "string", "maxLength": 500 },
+        "governorate": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 1000 },
+        "isVerified": { "type": "boolean" },
+        "helpfulCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reviewId", "productId", "userName", "rating", "comment"]
+    },
+    "AwniFolder": {
+      "title": "AwniFolder",
+      "description": "User folder for categorizing Awni conversations and feasibility studies",
+      "type": "object",
+      "properties": {
+        "folderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "icon": { "type": "string", "maxLength": 50 },
+        "color": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["folderId", "userId", "name"]
+    },
+    "AwniConversation": {
+      "title": "AwniConversation",
+      "description": "Saved and categorized Awni conversation, feasibility study, or commercial idea",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "folderId": { "type": "string" },
+        "category": { "type": "string", "enum": ["feasibility", "ideas", "riyada", "finance", "marketplace", "general"] },
+        "summary": { "type": "string", "maxLength": 500 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "messages": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "category"]
+    },
+    "ProjectRating": {
+      "title": "ProjectRating",
+      "description": "Evaluation and rating of registered Omani projects by investors and visitors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "projectName": { "type": "string" },
+        "evaluatorName": { "type": "string", "maxLength": 100 },
+        "evaluatorRole": { "type": "string", "enum": ["investor", "visitor", "business_partner", "expert"] },
+        "evaluatorOrganization": { "type": "string", "maxLength": 150 },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "investmentPotentialScore": { "type": "number", "minimum": 1, "maximum": 5 },
+        "innovationScore": { "type": "number", "minimum": 1, "maximum": 5 },
+        "marketReadinessScore": { "type": "number", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string", "maxLength": 1500 },
+        "recommendToInvestors": { "type": "boolean" },
+        "helpfulCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "evaluatorName", "evaluatorRole", "rating", "comment"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile information"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Marketplace products"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer purchase orders"
+    },
+    "/projectRatings/{ratingId}": {
+      "schema": { "$ref": "#/entities/ProjectRating" },
+      "description": "Evaluations and ratings of registered Omani projects by investors and visitors"
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Collection of admin users"
+    },
+    "/users/{userId}/wishlist/{productId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "User saved favorite products"
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ProductReview" },
+      "description": "Customer reviews and ratings for products"
+    },
+    "/users/{userId}/awniFolders/{folderId}": {
+      "schema": { "$ref": "#/entities/AwniFolder" },
+      "description": "User custom folders for Awni conversations"
+    },
+    "/users/{userId}/awniConversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/AwniConversation" },
+      "description": "User saved and categorized Awni conversations"
+    }
+  }
+}
