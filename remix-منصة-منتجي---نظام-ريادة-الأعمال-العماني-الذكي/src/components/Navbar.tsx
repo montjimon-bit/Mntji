@@ -40,16 +40,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
   const [searchQuery, setSearchQuery] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // الروابط الرئيسية لشاشات الكمبيوتر
-    const navLinks = [
-  { id: 'home', label: 'الرئيسية' },
-  { id: 'science-lab', label: 'مختبر العلوم والهولوجرام 🧪', highlight: true }, // 👈 أضف هذا الرابط هنا
-  { id: 'marketplace.html', label: 'السوق العُماني' },
-  { id: 'ai-platform.html', label: 'المستشار عوني', highlight: true },
-  { id: 'ai-business-idea.html', label: 'دراسات الجدوى' },
-  { id: 'training-courses.html', label: 'الدورات والورش' },
-  ...(hasStore ? [{ id: 'dashboard.html', label: isAdmin ? 'لوحة الإدارة' : 'متجري' }] : []),
-    ];
+  // الروابط الرئيسية لشاشات الكمبيوتر (بدون رابط الهولوجرام ومختبر العلوم)
+  const navLinks = [
+    { id: 'home', label: 'الرئيسية' },
+    { id: 'marketplace.html', label: 'السوق العُماني' },
+    { id: 'ai-platform.html', label: 'المستشار عوني', highlight: true },
+    { id: 'ai-business-idea.html', label: 'دراسات الجدوى' },
+    { id: 'training-courses.html', label: 'الدورات والورش' },
+    ...(hasStore ? [{ id: 'dashboard.html', label: isAdmin ? 'لوحة الإدارة' : 'متجري' }] : []),
+  ];
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
               </div>
             </button>
 
-            {/* شريط البحث (يظهر في الكمبيوتر فقط لإلغاء الازدحام في الهاتف) */}
+            {/* شريط البحث */}
             <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-xs xl:max-w-md mx-2">
               <div className="relative w-full">
                 <input
@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
             {/* عناصر التحكم العلوية */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
-              {/* أيقونة بحث للهاتف (تفتح عند اللمس فقط ولا تزحم الهيدر) */}
+              {/* أيقونة بحث للهاتف */}
               <button
                 type="button"
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
@@ -184,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
                 )}
               </button>
 
-              {/* حالة تسجيل الدخول: زر Google الصريح والمباشر */}
+              {/* حالة تسجيل الدخول */}
               {user ? (
                 <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <div className="flex items-center gap-1.5 px-2 py-1">
@@ -221,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
                 </button>
               )}
 
-              {/* زر الدليل الشامل للهاتف (يفتح MobilePlatformHub بدون تضارب) */}
+              {/* زر الدليل الشامل للهاتف */}
               <button
                 onClick={() => (onOpenHub ? onOpenHub() : onOpenAuth('login'))}
                 className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white cursor-pointer"
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
           </div>
         </div>
 
-        {/* حقل البحث المنسدل للهاتف فقط */}
+        {/* حقل البحث المنسدل للهاتف */}
         {mobileSearchOpen && (
           <div className="md:hidden px-4 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0d232d]">
             <form onSubmit={handleSearchSubmit} className="relative">
