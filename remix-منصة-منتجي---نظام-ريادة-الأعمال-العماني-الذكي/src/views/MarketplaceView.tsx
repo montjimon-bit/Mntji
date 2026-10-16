@@ -16,6 +16,7 @@ import {
   Store,
   Award,
   Share2,
+  Trash2,
 } from 'lucide-react';
 import { PRODUCTS_DATA, Product, OMAN_GOVERNORATES } from '../data/mockData';
 import { useCart } from '../context/CartContext';
@@ -28,7 +29,7 @@ interface MarketplaceViewProps {
 }
 
 export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) => {
-  const { products, addToCart, cartCount, orders } = useCart();
+  const { products, addToCart, cartCount, orders, deleteProduct } = useCart();
   const { isInWishlist, toggleWishlist, wishlistCount } = useWishlist();
   const [searchQuery, setSearchQuery] = useState(() => {
     return sessionStorage.getItem('montaji_search_query') || '';
@@ -52,6 +53,23 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
     setAutoOpenReviewForm(true);
     setSelectedProduct(product);
     setDetailQuantity(1);
+  };
+
+  const handleDeleteProduct = async (product: Product, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const confirmed = window.confirm(`هل أنت متأكد من حذف المنتج: "${product.title}"؟`);
+    if (confirmed) {
+      try {
+        await deleteProduct(product.id);
+        if (selectedProduct?.id === product.id) {
+          setSelectedProduct(null);
+        }
+        setAddedToast(`تم حذف "${product.title}" بنجاح!`);
+        setTimeout(() => setAddedToast(null), 2500);
+      } catch (err) {
+        console.error('Error deleting product:', err);
+      }
+    }
   };
 
   const subCategoriesByCategory: Record<string, string[]> = {
@@ -145,7 +163,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
       if (sortBy === 'rating') return b.seller.rating - a.seller.rating;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [searchQuery, selectedCategory, selectedSubCategory, selectedGovernorate, onlyRiyada, sortBy]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, selectedGovernorate, onlyRiyada, sortBy, products]);
 
   const handleAddToCart = (product: Product, quantity = 1, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -160,7 +178,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
       {addedToast && (
         <div className="fixed bottom-24 right-6 z-50 bg-[#153e4d] text-[#e9cca0] border border-[#c59b5f]/50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-sm font-semibold animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="w-5 h-5 text-[#c59b5f]" />
-          <span>تمت إضافة "{addedToast}" إلى السلة بنجاح!</span>
+          <span>{addedToast}</span>
         </div>
       )}
 
@@ -353,8 +371,18 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
                       loading="lazy"
                     />
 
-                    {/* Wishlist and Share Action Buttons */}
+                    {/* Wishlist, Share and Delete Action Buttons */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                      {/* زر حذف المنتج */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteProduct(product, e)}
+                        className="p-2 rounded-xl backdrop-blur-md bg-rose-600/90 hover:bg-rose-700 text-white transition-all shadow-md cursor-pointer hover:scale-110"
+                        title="حذف المنتج من المنصة"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+
                       <button
                         type="button"
                         onClick={(e) => {
@@ -602,6 +630,17 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* Delete button inside details modal */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteProduct(selectedProduct, e)}
+                      className="p-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+                      title="حذف المنتج نهائياً"
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-600" />
+                      <span className="hidden sm:inline">حذف</span>
+                    </button>
+
                     {/* Share Product Button */}
                     <button
                       type="button"
