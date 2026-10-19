@@ -6,8 +6,6 @@ import {
   Sparkles,
   X,
   Headphones,
-  Camera,
-  Store,
 } from 'lucide-react';
 import { KioskStoreCreator } from './components/KioskStoreCreator';
 import { AuthProvider } from './context/AuthContext';
@@ -20,7 +18,6 @@ import { AwniChatWidget } from './components/AwniChatWidget';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobilePlatformHub } from './components/MobilePlatformHub';
 import { PlatformBreadcrumbs } from './components/PlatformBreadcrumbs';
-import { MontajiScienceLab } from './components/MontajiScienceLab';
 
 import { HomeView } from './views/HomeView';
 import { MarketplaceView } from './views/MarketplaceView';
@@ -39,7 +36,6 @@ import { EntrepreneurDashboardView } from './views/EntrepreneurDashboardView';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>(() => {
-    // Check initial hash or path
     const hash = window.location.hash.replace('#', '').replace(/^\//, '');
     const path = window.location.pathname.replace(/^\//, '');
     return hash || path || 'home';
@@ -51,9 +47,8 @@ export default function App() {
   const [contactMenuOpen, setContactMenuOpen] = useState(false);
   const [platformHubOpen, setPlatformHubOpen] = useState(false);
 
-  // Sync route on hash change or navigation
+  // مزامنة التوجيه الداخلي
   const navigateTo = (view: string) => {
-    // Normalize view
     let clean = view.replace(/^#/, '').replace(/^\//, '');
     if (!clean || clean === '#') clean = 'home';
     setCurrentView(clean);
@@ -76,31 +71,28 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Dynamic SEO and Google metadata update per view
+  // تحديث بيانات SEO وعناوين الصفحات ديناميكياً
   useEffect(() => {
     const normalized = currentView.toLowerCase().trim();
     let pageTitle = 'منصة منتجي - المنظومة الوطنية لرواد الأعمال والمشاريع العُمانية';
     let pageDesc = 'المنصة الوطنية المتكاملة لتمكين رواد الأعمال وأصحاب المشاريع العمانية: دراسات جدوى استثمارية بالريال العماني مع المستشار عوني، وسوق رقمي وطني لحاملي بطاقة ريادة.';
 
     if (normalized.includes('kiosk') || normalized.includes('open-store') || normalized.includes('scan-model')) {
-      pageTitle = 'شكّل مجسمك وافتح متجرك فوراً | منصة منتجي';
-      pageDesc = 'التقط صورة لمجسمك أو ابتكارك بالذكاء الاصطناعي وافتح متجرك الرقمي فوراً مع إمكانية طباعة بطاقة المتجر ورمز QR مقاس A5.';
-    } else if (normalized.includes('science-lab') || normalized.includes('lab') || normalized.includes('hologram')) {
-      pageTitle = 'مختبر منتجي للابتكار والهولوجرام - مهرجان عُمان للعلوم | منصة منتجي';
-      pageDesc = 'حوّل مجسماتك واختراعاتك بالذكاء الاصطناعي إلى متاجر رقمية تفاعلية وعروض هولوجرام ثلاثية الأبعاد ضمن مهرجان عُمان للعلوم.';
+      pageTitle = 'شكّل مجسمك بالبوث وافتح متجرك فوراً | منصة منتجي';
+      pageDesc = 'التقط صورة لمجسمك بالذكاء الاصطناعي وافتح متجرك الرقمي فوراً مع إمكانية طباعة بطاقة المتجر الرسمية A5 ورمز QR.';
     } else if (normalized.includes('marketplace')) {
       pageTitle = 'السوق الرقمي العماني - منتجات وسلع وطنية معتمدة | منصة منتجي';
       pageDesc = 'تسوق أجود المنتجات العمانية الأصيلة: اللبان الظفاري، عسل السدر الجبلي، الحلوى العمانية، الحرف الفضية، والخزف التراثي بدعم مباشر لرواد الأعمال.';
     } else if (normalized.includes('ai-platform')) {
       pageTitle = 'المستشار الاقتصادي عوني - دراسات جدوى وتمويل ريادة | منصة منتجي';
       pageDesc = 'استشر المستشار الاقتصادي الذكي عوني لإعداد دراسات الجدوى بالريال العماني، قروض بنك التنمية بدون فوائد، وشروط بطاقة ريادة 2026.';
-    } else if (normalized.includes('ai-business-idea')) {
+    } else if (normalized.includes('ai-business-idea') || normalized.includes('business-idea')) {
       pageTitle = 'مولد أفكار المشاريع العمانية الذكي | منصة منتجي';
       pageDesc = 'اكتشف فرص وأفكار مشاريع عمانية واعدة متوافقة مع رؤية عمان 2040 وخيارات التمويل الميسر من بنك التنمية وهيئة ريادة.';
-    } else if (normalized.includes('success-stories')) {
+    } else if (normalized.includes('success-stories') || normalized.includes('stories')) {
       pageTitle = 'قصص نجاح المشاريع العمانية وتقييمات المستثمرين | منصة منتجي';
       pageDesc = 'استكشف مسيرة رواد الأعمال العمانيين، تقييمات المستثمرين للمشاريع المسجلة، ونماذج ملهمة حققت نمواً تصديرياً في السلطنة والخليج.';
-    } else if (normalized.includes('training')) {
+    } else if (normalized.includes('training') || normalized.includes('courses')) {
       pageTitle = 'الدورات والورش التدريبية لرواد الأعمال | منصة منتجي';
       pageDesc = 'برامج تدريبية متخصصة في تأسيس المشاريع، التسويق الرقمي، المحاسبة المالية، وإدارة المؤسسات الصغيرة والمتوسطة بسلطنة عمان.';
     } else if (normalized.includes('register')) {
@@ -120,7 +112,6 @@ export default function App() {
 
     document.title = pageTitle;
 
-    // Update meta tags for Google indexing
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) metaDesc.setAttribute('content', pageDesc);
 
@@ -137,7 +128,7 @@ export default function App() {
     if (twDesc) twDesc.setAttribute('content', pageDesc);
   }, [currentView]);
 
-  // Global link interceptor for any legacy .html links
+  // التوجيه التلقائي للروابط القديمة
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a');
@@ -146,7 +137,7 @@ export default function App() {
         if (
           href.endsWith('.html') ||
           href.startsWith('#') ||
-          ['marketplace', 'ai-platform', 'cart', 'checkout', 'orders', 'science-lab', 'kiosk-store'].some((r) => href.includes(r))
+          ['marketplace', 'ai-platform', 'cart', 'checkout', 'orders', 'kiosk-store'].some((r) => href.includes(r))
         ) {
           e.preventDefault();
           navigateTo(href);
@@ -165,86 +156,36 @@ export default function App() {
   const renderCurrentView = () => {
     const normalized = currentView.toLowerCase().trim();
 
-    // 1. مسار تصوير المجسم وفتح المتجر مع طباعة A5 والـ QR
+    // مسار البوث المدمج: فتح المتجر والطباعة الفورية
     if (
       normalized.includes('kiosk') ||
       normalized.includes('open-store') ||
       normalized.includes('create-store') ||
       normalized.includes('scan-model')
     ) {
-      return <KioskStoreCreator />;
-    }
-
-    // 2. مسار مختبر العلوم والهولوجرام
-    if (normalized.includes('science-lab') || normalized.includes('hologram-lab')) {
-      return <MontajiScienceLab onBackToHome={() => navigateTo('home')} />;
+      return <KioskStoreCreator onBack={() => navigateTo('home')} />;
     }
 
     if (normalized === 'home' || normalized === '') {
       return <HomeView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
     }
 
-    if (normalized.includes('marketplace')) {
-      return <MarketplaceView onNavigate={navigateTo} />;
-    }
+    if (normalized.includes('marketplace')) return <MarketplaceView onNavigate={navigateTo} />;
+    if (normalized.includes('ai-platform')) return <AiPlatformView onNavigate={navigateTo} />;
+    if (normalized.includes('ai-business-idea') || normalized.includes('business-idea')) return <AiBusinessIdeaView onNavigate={navigateTo} />;
+    if (normalized.includes('training') || normalized.includes('courses')) return <TrainingCoursesView />;
+    if (normalized.includes('success-stories') || normalized.includes('stories')) return <SuccessStoriesView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
+    if (normalized.includes('wishlist') || normalized.includes('favorites') || normalized.includes('favorite')) return <WishlistView onNavigate={navigateTo} />;
+    if (normalized.includes('cart')) return <CartView onNavigate={navigateTo} />;
+    if (normalized.includes('checkout')) return <CheckoutView onNavigate={navigateTo} />;
+    if (normalized.includes('order-confirmation') || normalized.includes('confirmation')) return <OrderConfirmationView onNavigate={navigateTo} />;
+    if (normalized.includes('order')) return <OrdersView onNavigate={navigateTo} />;
+    if (normalized.includes('register')) return <RegisterEntrepreneurView onNavigate={navigateTo} initialMode="register" />;
+    if (normalized.includes('login')) return <RegisterEntrepreneurView onNavigate={navigateTo} initialMode="login" />;
+    if (normalized.includes('terms')) return <LegalView initialTab="terms" onNavigate={navigateTo} />;
+    if (normalized.includes('privacy')) return <LegalView initialTab="privacy" onNavigate={navigateTo} />;
+    if (normalized.includes('dashboard') || normalized.includes('admin') || normalized.includes('analytics')) return <EntrepreneurDashboardView onNavigate={navigateTo} />;
 
-    if (normalized.includes('ai-platform')) {
-      return <AiPlatformView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('ai-business-idea') || normalized.includes('business-idea')) {
-      return <AiBusinessIdeaView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('training') || normalized.includes('courses')) {
-      return <TrainingCoursesView />;
-    }
-
-    if (normalized.includes('success-stories') || normalized.includes('stories')) {
-      return <SuccessStoriesView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
-    }
-
-    if (normalized.includes('wishlist') || normalized.includes('favorites') || normalized.includes('favorite')) {
-      return <WishlistView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('cart')) {
-      return <CartView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('checkout')) {
-      return <CheckoutView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('order-confirmation') || normalized.includes('confirmation')) {
-      return <OrderConfirmationView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('order')) {
-      return <OrdersView onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('register')) {
-      return <RegisterEntrepreneurView onNavigate={navigateTo} initialMode="register" />;
-    }
-
-    if (normalized.includes('login')) {
-      return <RegisterEntrepreneurView onNavigate={navigateTo} initialMode="login" />;
-    }
-
-    if (normalized.includes('terms')) {
-      return <LegalView initialTab="terms" onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('privacy')) {
-      return <LegalView initialTab="privacy" onNavigate={navigateTo} />;
-    }
-
-    if (normalized.includes('dashboard') || normalized.includes('admin') || normalized.includes('analytics')) {
-      return <EntrepreneurDashboardView onNavigate={navigateTo} />;
-    }
-
-    // Default fallback to HomeView
     return <HomeView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
   };
 
@@ -253,7 +194,8 @@ export default function App() {
       <CartProvider>
         <WishlistProvider>
           <div className="min-h-screen flex flex-col bg-[#f8fafb] text-slate-800 antialiased selection:bg-[#1f5b70] selection:text-white font-sans relative">
-            {/* Navigation Header */}
+            
+            {/* شريط التنقل العلوي بدون مختبر العلوم */}
             <Navbar
               currentView={currentView}
               onNavigate={navigateTo}
@@ -261,34 +203,19 @@ export default function App() {
               onOpenHub={() => setPlatformHubOpen(true)}
             />
 
-            {/* Clear Navigational Breadcrumbs for Orientation */}
+            {/* مسار الصفحة */}
             <PlatformBreadcrumbs
               currentView={currentView}
               onNavigate={navigateTo}
             />
 
-            {/* Dynamic Main Body Content with safe bottom padding for mobile navigation */}
+            {/* المحتوى الرئيسي */}
             <main className="flex-1 pb-28 sm:pb-24 lg:pb-8">
               {renderCurrentView()}
             </main>
 
-            {/* زر عائم مباشر وسريع: "صوّر وافتح متجرك" للمعارض والزوار */}
-            <div className="fixed top-24 left-4 z-40 hidden md:block">
-              <button
-                onClick={() => navigateTo('kiosk-store')}
-                className="bg-gradient-to-r from-[#153e4d] via-[#1f5b70] to-[#c59b5f] text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 hover:scale-105 transition-all duration-300 border border-[#dfba83]/40 cursor-pointer"
-                title="التقط صورة لمجسمك وافتح متجرك فوراً"
-              >
-                <Camera className="w-5 h-5 text-[#dfba83] animate-pulse" />
-                <div className="text-right">
-                  <div className="text-xs font-bold text-[#dfba83]">ركن الابتكار والفعاليات</div>
-                  <div className="text-[13px] font-extrabold">صوّر مجسمك وافتح متجرك</div>
-                </div>
-              </button>
-            </div>
-
-            {/* Floating Quick Support Widget (Instagram, WhatsApp, Phone, AI, Kiosk) */}
-            <div className="fixed bottom-20 left-4 lg:bottom-6 lg:left-6 z-30 flex flex-col items-start gap-2">
+            {/* قائمة التواصل المباشر السريعة والدعم الفني */}
+            <div className="fixed bottom-20 left-4 lg:bottom-6 lg:left-6 z-30 flex flex-col items-start gap-2 print:hidden">
               {contactMenuOpen && (
                 <div className="bg-[#122e3a] border border-[#1f5b70] text-white p-3 rounded-2xl shadow-2xl space-y-2 text-xs font-semibold animate-in slide-in-from-bottom-3 w-56">
                   <div className="text-[11px] text-[#dfba83] border-b border-slate-700 pb-1.5 font-bold flex items-center justify-between">
@@ -301,19 +228,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Kiosk Store Button inside quick menu */}
-                  <button
-                    onClick={() => {
-                      setContactMenuOpen(false);
-                      navigateTo('kiosk-store');
-                    }}
-                    className="w-full flex items-center gap-2 p-2 hover:bg-[#c59b5f]/20 rounded-xl transition-colors text-[#dfba83] text-right cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4 text-[#c59b5f]" />
-                    <span>صوّر وافتح متجرك (A5 + QR)</span>
-                  </button>
-
-                  {/* Instagram Direct */}
+                  {/* حساب الإنستغرام */}
                   <a
                     href="https://www.instagram.com/montji_/?hl=ar"
                     target="_blank"
@@ -324,7 +239,7 @@ export default function App() {
                     <span className="text-white" dir="ltr">@montji_ إنستغرام</span>
                   </a>
 
-                  {/* WhatsApp Support */}
+                  {/* واتساب المنصة */}
                   <a
                     href="https://wa.me/96894842840"
                     target="_blank"
@@ -335,7 +250,7 @@ export default function App() {
                     <span className="text-white">واتساب الدعم المباشر</span>
                   </a>
 
-                  {/* Direct Phone */}
+                  {/* الهاتف */}
                   <a
                     href="tel:+96894842840"
                     className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-xl transition-colors text-[#c59b5f]"
@@ -344,7 +259,7 @@ export default function App() {
                     <span className="text-white font-mono" dir="ltr">+968 9484 2840</span>
                   </a>
 
-                  {/* Fast AI advisor */}
+                  {/* المستشار الذكي عوني */}
                   <button
                     onClick={() => {
                       setContactMenuOpen(false);
@@ -368,17 +283,17 @@ export default function App() {
               </button>
             </div>
 
-            {/* Floating AI Chatbot Widget (عوني) on bottom-right */}
+            {/* أيقونة المساعد الذكي عوني */}
             <AwniChatWidget onNavigate={navigateTo} />
 
-            {/* Ergonomic Mobile Bottom Navigation Bar (Phone & Tablet) */}
+            {/* شريط التنقل السفلي للأجهزة الذكية */}
             <MobileBottomNav
               currentView={currentView}
               onNavigate={navigateTo}
               onOpenHub={() => setPlatformHubOpen(true)}
             />
 
-            {/* Comprehensive Platform Hub & Directory Drawer */}
+            {/* درج الخدمات والأقسام */}
             <MobilePlatformHub
               isOpen={platformHubOpen}
               onClose={() => setPlatformHubOpen(false)}
@@ -387,10 +302,10 @@ export default function App() {
               onOpenAuth={handleOpenAuth}
             />
 
-            {/* Global Footer */}
+            {/* التذييل */}
             <Footer onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />
 
-            {/* Auth Modal */}
+            {/* نافذة تسجيل الدخول والاشتراك */}
             <AuthModal
               isOpen={authModalOpen}
               initialMode={authModalMode}
