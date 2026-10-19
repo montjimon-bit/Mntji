@@ -11,14 +11,18 @@ import {
   Award,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
+  Store,
+  Tag,
+  Share2,
 } from 'lucide-react';
 
 interface KioskStoreCreatorProps {
   onBack?: () => void;
 }
 
-interface GeneratedStore {
-  id: string;
+interface CustomStore {
+  storeId: string;
   storeName: string;
   ownerName: string;
   productTitle: string;
@@ -28,6 +32,7 @@ interface GeneratedStore {
   productImage: string;
   storeUrl: string;
   qrDataUrl: string;
+  createdAt: string;
 }
 
 export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) => {
@@ -35,15 +40,15 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMimeType, setImageMimeType] = useState<string>('image/jpeg');
-  
-  const [createdStore, setCreatedStore] = useState<GeneratedStore | null>(null);
+
+  const [createdStore, setCreatedStore] = useState<CustomStore | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // التقاط وقراءة الصورة
+  // التقاط وقراءة الصورة من كاميرا الجوال أو الألبوم
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -59,16 +64,16 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
     }
   };
 
-  // تحليل المجسم بالذكاء الاصطناعي وإنشاء المتجر والبطاقة
+  // معالجة وتحليل وتوليد المتجر الخاص
   const handleAnalyzeAndCreateStore = async () => {
     if (!imageBase64 || !ownerName.trim()) {
-      setErrorMsg('يرجى إدخال اسم رائد الأعمال والتقاط صورة للمجسم أولاً');
+      setErrorMsg('يرجى كتابة اسمك والتقاط صورة للمنتج/المجسم أولاً');
       return;
     }
 
     setErrorMsg('');
     setIsAnalyzing(true);
-    setStatusMessage('جارٍ فحص وتحليل المجسم بواسطة الذكاء الاصطناعي...');
+    setStatusMessage('جارٍ فحص وتحليل المنتج بالذكاء الاصطناعي...');
 
     try {
       const apiKey =
@@ -77,27 +82,26 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
         '';
 
       let aiData = {
-        productTitle: 'مجسم الابتكار العُماني',
-        category: 'ابتكار تقني وطني',
+        productTitle: 'مجسم الابتكار العُماني الذكي',
+        category: 'ابتكار وطني',
         priceOMR: '25.000',
-        description: 'ابتكار وطني واعد تم تصميمه وتدشينه عبر منصة مُنتجي لدعم رواد الأعمال',
-        storeSuggestedName: `متجر ${ownerName.trim()} للابتكار`,
+        description: 'منتج ابتكاري عُماني رائد تم تدشينه وإدراجه عبر منصة مُنتجي الوطنية.',
+        storeSuggestedName: `متجر ${ownerName.trim()}`,
       };
 
-      // إذا وُجد مفتاح Gemini API يتم تحليل الصورة فعلياً
       if (apiKey) {
         try {
           const ai = new GoogleGenAI({ apiKey });
-          const prompt = `أنت خبير اقتصادي ومقيّم ابتكارات في منصة "مُنتجي" العُمانية.
-قم بتحليل صورة هذا المجسم أو النموذج المصنوع في المعرض/البوث، واستخرج الآتي بصيغة JSON حصرية ودقيقة:
+          const prompt = `أنت خبير اقتصادي ومقيم ابتكارات في منصة "مُنتجي" العُمانية.
+حلل صورة هذا المنتج أو المجسم واستخرج الآتي بصيغة JSON حصرية ودقيقة:
 {
-  "productTitle": "اسم ابتكاري وجذاب للمنتج بالعربية يناسب الهوية العمانية والابتكار",
-  "category": "تصنيف المنتج مثل: ابتكار تقني، حرف تراثية، طاقة متجددة، بيئة، تعليم",
-  "priceOMR": "سعر تقديري مناسب بالريال العماني مع 3 خانات عشرية (مثال: 18.500)",
-  "description": "وصف تسويقي ملهم وموجز من سطرين يبرز فائدة الابتكار",
-  "storeSuggestedName": "اسم مقترح للمتجر يرتبط برائد الأعمال ${ownerName}"
+  "productTitle": "اسم ابتكاري وجذاب للمنتج بالعربية",
+  "category": "تصنيف المنتج",
+  "priceOMR": "سعر تقديري بالريال العماني بـ 3 خانات عشرية (مثال: 22.500)",
+  "description": "وصف تسويقي احترافي ومختصر في حدود سطرين",
+  "storeSuggestedName": "اسم المتجر المقترح لصاحبه ${ownerName}"
 }
-أجب بكود JSON فقط وبدون أي نصوص إضافية.`;
+أجب بـ JSON فقط.`;
 
           const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -123,14 +127,15 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
             aiData = { ...aiData, ...JSON.parse(jsonMatch[0]) };
           }
         } catch (aiErr) {
-          console.warn('Gemini AI fallback active:', aiErr);
+          console.warn('AI fallback active:', aiErr);
         }
       }
 
-      setStatusMessage('جارٍ تدشين المتجر وإعداد بطاقة الطباعة A5...');
-      const storeId = 'om-' + Date.now().toString().slice(-6);
+      setStatusMessage('جارٍ بناء متجرك الخاص وتوليد رمز QR...');
+      
+      // معرف فريد وخاص بمتجرك
+      const uniqueStoreId = 'store-' + Date.now().toString().slice(-6);
 
-      // تحديد الرابط الرسمي الصحيح للمتجر
       const origin =
         typeof window !== 'undefined' &&
         window.location.origin &&
@@ -138,39 +143,12 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
           ? window.location.origin
           : 'https://montji-om.vercel.app';
 
-      const finalStoreUrl = `${origin}/#marketplace?store=${storeId}`;
+      // رابط مباشر إلى متجرك الخاص
+      const personalStoreUrl = `${origin}/#store?id=${uniqueStoreId}`;
 
-      // حفظ المتجر محلياً ليكون متاحاً في المنصة
-      try {
-        const existingStores = JSON.parse(localStorage.getItem('montji_stores') || '[]');
-        existingStores.unshift({
-          id: storeId,
-          storeName: aiData.storeSuggestedName,
-          ownerName: ownerName.trim(),
-          productTitle: aiData.productTitle,
-          category: aiData.category,
-          priceOMR: aiData.priceOMR,
-          description: aiData.description,
-          productImage: imagePreview,
-          createdAt: new Date().toISOString(),
-        });
-        localStorage.setItem('montji_stores', JSON.stringify(existingStores));
-      } catch (e) {
-        console.warn('Storage save:', e);
-      }
-
-      // توليد رمز QR صالح 100% يفتح المتجر فوراً عند مسحه بالهاتف
-      const qrUrl = await QRCode.toDataURL(finalStoreUrl, {
-        width: 360,
-        margin: 2,
-        color: {
-          dark: '#153e4d',
-          light: '#ffffff',
-        },
-      });
-
-      setCreatedStore({
-        id: storeId,
+      // حفظ المتجر في سجلات المتصفح لربطه فوراً
+      const storeRecord: CustomStore = {
+        storeId: uniqueStoreId,
         storeName: aiData.storeSuggestedName,
         ownerName: ownerName.trim(),
         productTitle: aiData.productTitle,
@@ -178,13 +156,38 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
         priceOMR: aiData.priceOMR,
         category: aiData.category,
         productImage: imagePreview!,
-        storeUrl: finalStoreUrl,
-        qrDataUrl: qrUrl,
+        storeUrl: personalStoreUrl,
+        qrDataUrl: '',
+        createdAt: new Date().toLocaleDateString('ar-OM'),
+      };
+
+      // توليد رمز QR عالي الدقة
+      const qrUrl = await QRCode.toDataURL(personalStoreUrl, {
+        width: 320,
+        margin: 2,
+        color: {
+          dark: '#153e4d',
+          light: '#ffffff',
+        },
       });
 
+      storeRecord.qrDataUrl = qrUrl;
+
+      try {
+        const currentStores = JSON.parse(localStorage.getItem('montji_user_stores') || '[]');
+        currentStores.unshift(storeRecord);
+        localStorage.setItem('montji_user_stores', JSON.stringify(currentStores));
+        localStorage.setItem('montji_active_store', JSON.stringify(storeRecord));
+      } catch (err) {
+        console.warn('LocalStorage error:', err);
+      }
+
+      // الانتقال المباشر لواجهة المتجر الخاص بك
+      setCreatedStore(storeRecord);
+
     } catch (err: any) {
-      console.error('Error creating store:', err);
-      setErrorMsg('حدث خطأ أثناء معالجة المجسم: ' + (err.message || 'يرجى المحاولة مجدداً'));
+      console.error(err);
+      setErrorMsg('حدث خطأ أثناء إعداد المتجر: ' + (err.message || 'حاول مجدداً'));
     } finally {
       setIsAnalyzing(false);
       setStatusMessage('');
@@ -196,8 +199,8 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-140px)] bg-[#f8fafb] py-8 px-4 sm:px-6 lg:px-8 font-sans" dir="rtl">
-      {/* تنسيقات الطباعة الصارمة لورقة A5 واحدة بالإطار العماني */}
+    <div className="w-full min-h-screen bg-[#f8fafb] text-slate-800 pb-16 font-sans antialiased" dir="rtl">
+      {/* تنسيقات الطباعة A5 المخصصة */}
       <style>{`
         @media print {
           @page {
@@ -231,139 +234,218 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
             background: #112d38 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            page-break-after: avoid !important;
-            page-break-before: avoid !important;
-            page-break-inside: avoid !important;
           }
         }
       `}</style>
 
-      {/* الرأس التوجيهي */}
-      <div className="max-w-4xl mx-auto mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
+      {/* الشريط العلوي للجوال والكمبيوتر */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30 flex items-center justify-between print:hidden">
         <button
           onClick={onBack || (() => (window.location.hash = ''))}
-          className="flex items-center gap-2 bg-white text-[#153e4d] hover:bg-[#153e4d] hover:text-white px-5 py-2.5 rounded-2xl text-sm font-bold border border-slate-200 shadow-sm transition-all cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-bold text-[#153e4d] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition"
         >
           <ArrowRight className="w-4 h-4" />
-          العودة للرئيسية
+          <span>الرئيسية</span>
         </button>
-
-        <div className="text-center sm:text-right">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c59b5f]/15 text-[#c59b5f] text-xs font-black border border-[#c59b5f]/30 mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            تحليل المجسمات بالذكاء الاصطناعي 🇴🇲
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#153e4d]">
-            شكّل مجسمك بالبوث وافتح متجرك فوراً
-          </h1>
-        </div>
-
-        <div className="w-24 hidden lg:block"></div>
+        <span className="text-xs font-black text-[#153e4d] truncate max-w-[200px]">
+          {createdStore ? createdStore.storeName : 'تدشين متجرك الفوري'}
+        </span>
+        <div className="w-12"></div>
       </div>
 
-      <div className="max-w-xl mx-auto print:hidden">
+      <div className="max-w-md mx-auto px-4 py-5 print:hidden">
         {!createdStore ? (
-          /* شاشة التقاط المجسم والتحليل الآلي */
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xl space-y-5">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                اسم رائد الأعمال / صانع المجسم:
-              </label>
-              <input
-                type="text"
-                placeholder="أدخل اسمك الكريم"
-                value={ownerName}
-                onChange={(e) => setOwnerName(e.target.value)}
-                className="w-full bg-[#f8fafb] border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-sm font-semibold focus:outline-none focus:border-[#153e4d] focus:bg-white transition"
-              />
+          /* واجهة الجوال لإدخال البيانات والتصوير */
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 bg-[#153e4d]/10 text-[#153e4d] rounded-2xl flex items-center justify-center mx-auto mb-2">
+                <Store className="w-6 h-6 text-[#c59b5f]" />
+              </div>
+              <h1 className="text-lg font-black text-[#153e4d]">شكّل مجسمك وافتح متجرك فوراً</h1>
+              <p className="text-xs text-slate-500">
+                التقط صورة لمنتجك، وسيقوم الذكاء الاصطناعي ببناء متجرك الخاص وتجهيز بطاقة A5 للطباعة
+              </p>
             </div>
 
-            {/* تصوير المجسم */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                صورة المجسم الفعلي:
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                ref={fileInputRef}
-                onChange={handleImageCapture}
-                className="hidden"
-              />
+            <div className="space-y-3 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  اسم رائد الأعمال / صانع المجسم:
+                </label>
+                <input
+                  type="text"
+                  placeholder="أدخل اسمك الكريم"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#153e4d] focus:bg-white transition"
+                />
+              </div>
 
-              {imagePreview ? (
-                <div className="relative rounded-2xl overflow-hidden border-2 border-[#c59b5f] h-52 bg-slate-900 flex items-center justify-center">
-                  <img src={imagePreview} alt="المجسم" className="w-full h-full object-cover" />
+              {/* منطقة التصوير المخصصة للهاتف */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  صورة المنتج أو الابتكار:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  ref={fileInputRef}
+                  onChange={handleImageCapture}
+                  className="hidden"
+                />
+
+                {imagePreview ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-[#c59b5f] h-48 bg-slate-900 flex items-center justify-center">
+                    <img src={imagePreview} alt="معاينة المجسم" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-2 right-2 bg-[#153e4d]/90 text-white text-[11px] px-3 py-1.5 rounded-xl border border-[#c59b5f]/50 flex items-center gap-1 font-bold shadow"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      إعادة الالتقاط
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-3 right-3 bg-[#153e4d] text-white text-xs px-3 py-1.5 rounded-xl border border-[#c59b5f]/50 flex items-center gap-1.5 font-bold shadow-md cursor-pointer hover:bg-[#1f5b70]"
+                    className="w-full h-40 rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#153e4d] bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-500 active:scale-98 transition"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    إعادة التصوير
+                    <div className="w-11 h-11 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-200">
+                      <Camera className="w-5 h-5 text-[#c59b5f]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700">اضغط لالتقاط صورة المجسم بالكاميرا</span>
+                    <span className="text-[10px] text-slate-400">سيتعرف الذكاء الاصطناعي على نوع المنتج وسعره</span>
                   </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#153e4d] bg-[#f8fafb] hover:bg-slate-50 flex flex-col items-center justify-center gap-2.5 text-slate-500 hover:text-[#153e4d] transition-all cursor-pointer"
-                >
-                  <div className="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-200">
-                    <Camera className="w-7 h-7 text-[#c59b5f]" />
-                  </div>
-                  <div className="text-center">
-                    <span className="text-sm font-bold block text-slate-700">اضغط لالتقاط صورة للمجسم بكاميرا البوث</span>
-                    <span className="text-xs text-slate-400 mt-0.5 block">الذكاء الاصطناعي سيتعرف على نوع الابتكار ويسعّره فوراً</span>
-                  </div>
-                </button>
-              )}
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2 font-bold">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{errorMsg}</span>
+                )}
               </div>
-            )}
 
-            <button
-              type="button"
-              onClick={handleAnalyzeAndCreateStore}
-              disabled={isAnalyzing || !imagePreview || !ownerName.trim()}
-              className="w-full bg-[#153e4d] hover:bg-[#1f5b70] text-[#dfba83] hover:text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 text-sm sm:text-base border border-[#c59b5f]/40"
-            >
-              {isAnalyzing ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>{statusMessage}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  <span>تحليل المجسم وتدشين المتجر وإصدار A5</span>
-                </>
+              {errorMsg && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2 font-bold">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
               )}
-            </button>
+
+              <button
+                type="button"
+                onClick={handleAnalyzeAndCreateStore}
+                disabled={isAnalyzing || !imagePreview || !ownerName.trim()}
+                className="w-full bg-[#153e4d] text-[#dfba83] font-black py-3.5 rounded-2xl shadow-lg flex items-center justify-center gap-2 active:scale-98 transition disabled:opacity-50 text-xs sm:text-sm border border-[#c59b5f]/40"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{statusMessage}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>تحليل المجسم وإنشاء متجري الخاص فوراً</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         ) : (
-          /* شاشة النجاح وعرض النتيجة المستخرجة بالذكاء الاصطناعي */
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>تم التعرف على المجسم وتدشين متجرك الوطني بنجاح!</span>
+          /* واجهة المتجر الخاص بك المنشأ (مخصصة ومحسنة للجوال 100%) */
+          <div className="space-y-4 animate-in fade-in duration-300">
+            {/* بنر التهنئة */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-emerald-800 text-xs font-black">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>تم تدشين متجرك الخاص بنجاح!</span>
               </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="flex-1 sm:flex-none bg-[#c59b5f] hover:bg-[#b58b4f] text-white px-6 py-2.5 rounded-xl font-black text-sm transition shadow flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Printer className="w-4 h-4" />
-                  طباعة بطاقة A5 الرسمية
-                </button>
+              <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
+                نشط أونلاين
+              </span>
+            </div>
+
+            {/* بطاقة واجهة المتجر الخاصة بك */}
+            <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm">
+              {/* هيدر المتجر */}
+              <div className="bg-[#153e4d] p-5 text-white text-center relative">
+                <span className="inline-block bg-[#c59b5f]/20 border border-[#c59b5f]/60 text-[#dfba83] text-[10px] font-bold px-3 py-0.5 rounded-full mb-2">
+                  متجر رائد أعمال معتمد 🇴🇲
+                </span>
+                <h2 className="text-lg font-black text-white">{createdStore.storeName}</h2>
+                <p className="text-xs text-[#dfba83] mt-0.5 font-medium">
+                  المالك: {createdStore.ownerName}
+                </p>
+              </div>
+
+              {/* صورة المنتج وتفاصيله */}
+              <div className="p-4 space-y-3">
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">
+                  <img
+                    src={createdStore.productImage}
+                    alt={createdStore.productTitle}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-[#153e4d]/90 text-[#dfba83] border border-[#c59b5f]/40 px-2.5 py-1 rounded-xl text-xs font-black">
+                    {createdStore.priceOMR} ر.ع
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-black text-sm text-[#153e4d]">{createdStore.productTitle}</h3>
+                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-bold">
+                      {createdStore.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    {createdStore.description}
+                  </p>
+                </div>
+
+                {/* كرت الـ QR الخاص بالمتجر */}
+                <div className="bg-[#f8fafb] border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3">
+                  <div className="space-y-0.5 text-right">
+                    <span className="text-xs font-black text-[#153e4d] block">امسح لزيارة المتجر</span>
+                    <span className="text-[10px] text-slate-500 block">
+                      وجه كاميرا أي هاتف لفتح متجرك والشراء مباشرة
+                    </span>
+                  </div>
+                  <div className="bg-white p-1 rounded-xl border border-slate-200 shrink-0">
+                    <img src={createdStore.qrDataUrl} alt="QR Code" className="w-16 h-16 object-contain" />
+                  </div>
+                </div>
+
+                {/* أزرار الإجراءات السريعة للجوال */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    className="bg-[#c59b5f] hover:bg-[#b58b4f] text-white py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>طباعة بطاقة A5</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: createdStore.storeName,
+                          text: `تفضل بزيارة متجري على منصة مُنتجي: ${createdStore.productTitle}`,
+                          url: createdStore.storeUrl,
+                        });
+                      } else {
+                        navigator.clipboard.writeText(createdStore.storeUrl);
+                        alert('تم نسخ رابط متجرك الخاص بنجاح!');
+                      }
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Share2 className="w-4 h-4 text-[#153e4d]" />
+                    <span>مشاركة الرابط</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -371,48 +453,18 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
                     setImagePreview(null);
                     setImageBase64(null);
                   }}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+                  className="w-full text-center text-xs text-slate-400 hover:text-slate-600 font-bold py-1.5"
                 >
-                  مجسم جديد
+                  تدشين مجسم أو منتج آخر
                 </button>
               </div>
-            </div>
-
-            {/* بطاقة تحليل الذكاء الاصطناعي على الشاشة */}
-            <div className="bg-[#112d38] rounded-3xl p-6 border-2 border-[#c59b5f] text-center text-white shadow-2xl space-y-4">
-              <div className="inline-block bg-[#c59b5f]/20 border border-[#c59b5f] text-[#dfba83] px-3 py-0.5 rounded-full text-xs font-bold">
-                ✓ متجر رائد أعمال معتمد 🇴🇲
-              </div>
-
-              <div>
-                <h2 className="text-xl font-black">{createdStore.storeName}</h2>
-                <p className="text-xs text-[#dfba83] mt-1 font-semibold">صاحب الابتكار: {createdStore.ownerName}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 bg-[#0a1820]/80 p-3 rounded-2xl border border-[#1f5b70] text-right text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">الابتكار المستخرج:</span>
-                  <span className="font-bold text-white">{createdStore.productTitle}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">السعر التقديري:</span>
-                  <span className="font-bold text-[#dfba83]">{createdStore.priceOMR} ر.ع</span>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-3 inline-block shadow-lg">
-                <img src={createdStore.qrDataUrl} alt="QR Code" className="w-32 h-32 object-contain" />
-              </div>
-              <p className="text-xs text-emerald-400 font-bold">
-                امسح الرمز بكاميرا هاتفك لفتح صفحة المتجر في السوق فوراً
-              </p>
             </div>
           </div>
         )}
       </div>
 
       {/* ========================================================================= */}
-      {/* البطاقة الرسمية للطباعة الفعلية A5 (تطبع ورقة واحدة فقط بالإطار العماني) */}
+      {/* البطاقة المعدة للطباعة A5 بالإطار العماني الكحلي والذهبي (صفحة واحدة فقط) */}
       {/* ========================================================================= */}
       {createdStore && (
         <div id="kiosk-print-sheet" className="hidden">
@@ -436,7 +488,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
               fontFamily: "'Cairo', 'Segoe UI', sans-serif",
             }}
           >
-            {/* شريط ذهبي علوي */}
+            {/* شريط علوي ذهبي */}
             <div
               style={{
                 position: 'absolute',
@@ -448,29 +500,14 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
               }}
             />
 
-            {/* الترويسة الوطنية */}
+            {/* الترويسة */}
             <div style={{ marginTop: '2px' }}>
-              <div
-                style={{
-                  fontSize: '22px',
-                  fontWeight: 900,
-                  color: '#ffffff',
-                  marginBottom: '1px',
-                }}
-              >
+              <div style={{ fontSize: '22px', fontWeight: 900, color: '#ffffff', marginBottom: '1px' }}>
                 مَنصّة مُنتَجي
               </div>
-              <div
-                style={{
-                  fontSize: '10px',
-                  color: '#dfba83',
-                  fontWeight: 600,
-                  marginBottom: '6px',
-                }}
-              >
+              <div style={{ fontSize: '10px', color: '#dfba83', fontWeight: 600, marginBottom: '6px' }}>
                 المنظومة الوطنية للمشاريع العُمانية • عُمان 2040
               </div>
-
               <div
                 style={{
                   display: 'inline-block',
@@ -485,15 +522,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
               >
                 متجر رائد أعمال معتمد 🇴🇲
               </div>
-
-              <div
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  marginTop: '6px',
-                }}
-              >
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff', marginTop: '6px' }}>
                 {createdStore.storeName}
               </div>
               <div style={{ fontSize: '11px', color: '#cbd5e1' }}>
@@ -501,7 +530,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
               </div>
             </div>
 
-            {/* إطار صورة المجسم الفعلي */}
+            {/* إطار صورة المجسم */}
             <div
               style={{
                 width: '110mm',
@@ -521,8 +550,6 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
                 alt="المجسم"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
-
-              {/* شارة السعر المستخرج بالذكاء الاصطناعي */}
               <div
                 style={{
                   position: 'absolute',
@@ -541,7 +568,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
               </div>
             </div>
 
-            {/* منطقة رمز QR الفعلي */}
+            {/* رمز الـ QR الخاص بمتجرك */}
             <div
               style={{
                 background: '#ffffff',
@@ -558,14 +585,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
                 alt="QR Code"
                 style={{ width: '34mm', height: '34mm', display: 'block' }}
               />
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 900,
-                  color: '#153e4d',
-                  marginTop: '4px',
-                }}
-              >
+              <span style={{ fontSize: '10px', fontWeight: 900, color: '#153e4d', marginTop: '4px' }}>
                 امسح الرمز لزيارة المتجر والشراء مباشرة
               </span>
             </div>
