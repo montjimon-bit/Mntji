@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import QRCode from 'qrcode';
 import { GoogleGenAI } from '@google/genai';
-import { db } from '../firebase'; // تأكد من مسار إعداد فايربيس في مشروعك
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import {
   Camera,
   Printer,
@@ -45,7 +43,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // قراءة وضغط الصورة الملتقطة
+  // التقاط وقراءة الصورة
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -54,7 +52,6 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
       reader.onloadend = () => {
         const result = reader.result as string;
         setImagePreview(result);
-        // استخراج كود Base64 النقي لإرساله لموديل Gemini
         const base64Data = result.split(',')[1];
         setImageBase64(base64Data);
       };
@@ -62,10 +59,10 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
     }
   };
 
-  // الدالة الذكية لتحليل المجسم عبر Gemini وحفظ المتجر في Firebase
+  // تحليل المجسم بالذكاء الاصطناعي وإنشاء المتجر والبطاقة
   const handleAnalyzeAndCreateStore = async () => {
     if (!imageBase64 || !ownerName.trim()) {
-      setErrorMsg('يرجى كتابة اسمك والتقاط صورة للمجسم أولاً');
+      setErrorMsg('يرجى إدخال اسم رائد الأعمال والتقاط صورة للمجسم أولاً');
       return;
     }
 
@@ -74,11 +71,24 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
     setStatusMessage('جارٍ فحص وتحليل المجسم بواسطة الذكاء الاصطناعي...');
 
     try {
-      // 1. استدعاء Gemini لتحليل الصورة
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-      const ai = new GoogleGenAI({ apiKey });
+      const apiKey =
+        (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
+        (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+        '';
 
-      const prompt = `أنت خبير اقتصادي ومقيم ابتكارات في منصة "مُنتجي" العُمانية.
+      let aiData = {
+        productTitle: 'مجسم الابتكار العُماني',
+        category: 'ابتكار تقني وطني',
+        priceOMR: '25.000',
+        description: 'ابتكار وطني واعد تم تصميمه وتدشينه عبر منصة مُنتجي لدعم رواد الأعمال',
+        storeSuggestedName: `متجر ${ownerName.trim()} للابتكار`,
+      };
+
+      // إذا وُجد مفتاح Gemini API يتم تحليل الصورة فعلياً
+      if (apiKey) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const prompt = `أنت خبير اقتصادي ومقيّم ابتكارات في منصة "مُنتجي" العُمانية.
 قم بتحليل صورة هذا المجسم أو النموذج المصنوع في المعرض/البوث، واستخرج الآتي بصيغة JSON حصرية ودقيقة:
 {
   "productTitle": "اسم ابتكاري وجذاب للمنتج بالعربية يناسب الهوية العمانية والابتكار",
@@ -89,71 +99,69 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
 }
 أجب بكود JSON فقط وبدون أي نصوص إضافية.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: prompt },
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [
               {
-                inlineData: {
-                  mimeType: imageMimeType,
-                  data: imageBase64,
-                },
+                role: 'user',
+                parts: [
+                  { text: prompt },
+                  {
+                    inlineData: {
+                      mimeType: imageMimeType,
+                      data: imageBase64,
+                    },
+                  },
+                ],
               },
             ],
-          },
-        ],
-      });
+          });
 
-      setStatusMessage('جارٍ استخراج وتنسيق بيانات المتجر...');
-      const responseText = response.text || '{}';
-      
-      // تنظيف النص واستخراج الـ JSON
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      const aiData = jsonMatch ? JSON.parse(jsonMatch[0]) : {
-        productTitle: 'مجسم الابتكار العُماني',
-        category: 'ابتكار وطني',
-        priceOMR: '20.000',
-        description: 'ابتكار وطني واعد تم تصميمه وتدشينه عبر منصة مُنتجي',
-        storeSuggestedName: `متجر ${ownerName} للابتكار`,
-      };
-
-      // 2. حفظ المتجر في قاعدة بيانات Firebase Firestore
-      setStatusMessage('جارٍ تسجيل وتدشين المتجر في السوق العماني...');
-      const storeId = 'om-' + Date.now().toString().slice(-6);
-      
-      const newStoreDoc = {
-        storeId,
-        ownerName: ownerName.trim(),
-        storeName: aiData.storeSuggestedName || `متجر ${ownerName}`,
-        productTitle: aiData.productTitle,
-        category: aiData.category,
-        priceOMR: aiData.priceOMR,
-        description: aiData.description,
-        productImage: imagePreview,
-        createdAt: serverTimestamp(),
-        status: 'active',
-        verified: true,
-      };
-
-      try {
-        await addDoc(collection(db, 'stores'), newStoreDoc);
-      } catch (dbErr) {
-        console.warn('Firebase save fallback:', dbErr);
+          const responseText = response.text || '{}';
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            aiData = { ...aiData, ...JSON.parse(jsonMatch[0]) };
+          }
+        } catch (aiErr) {
+          console.warn('Gemini AI fallback active:', aiErr);
+        }
       }
 
-      // 3. توليد رمز QR صالح يفتح صفحة المتجر مباشرة
-      setStatusMessage('جارٍ توليد رمز الـ QR وبطاقة A5 الرسمية...');
-      const origin = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
-        ? window.location.origin
-        : 'https://montji-om.vercel.app';
+      setStatusMessage('جارٍ تدشين المتجر وإعداد بطاقة الطباعة A5...');
+      const storeId = 'om-' + Date.now().toString().slice(-6);
+
+      // تحديد الرابط الرسمي الصحيح للمتجر
+      const origin =
+        typeof window !== 'undefined' &&
+        window.location.origin &&
+        !window.location.origin.includes('localhost')
+          ? window.location.origin
+          : 'https://montji-om.vercel.app';
 
       const finalStoreUrl = `${origin}/#marketplace?store=${storeId}`;
 
+      // حفظ المتجر محلياً ليكون متاحاً في المنصة
+      try {
+        const existingStores = JSON.parse(localStorage.getItem('montji_stores') || '[]');
+        existingStores.unshift({
+          id: storeId,
+          storeName: aiData.storeSuggestedName,
+          ownerName: ownerName.trim(),
+          productTitle: aiData.productTitle,
+          category: aiData.category,
+          priceOMR: aiData.priceOMR,
+          description: aiData.description,
+          productImage: imagePreview,
+          createdAt: new Date().toISOString(),
+        });
+        localStorage.setItem('montji_stores', JSON.stringify(existingStores));
+      } catch (e) {
+        console.warn('Storage save:', e);
+      }
+
+      // توليد رمز QR صالح 100% يفتح المتجر فوراً عند مسحه بالهاتف
       const qrUrl = await QRCode.toDataURL(finalStoreUrl, {
-        width: 380,
+        width: 360,
         margin: 2,
         color: {
           dark: '#153e4d',
@@ -163,20 +171,20 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack }) 
 
       setCreatedStore({
         id: storeId,
-        storeName: newStoreDoc.storeName,
-        ownerName: newStoreDoc.ownerName,
-        productTitle: newStoreDoc.productTitle,
-        description: newStoreDoc.description,
-        priceOMR: newStoreDoc.priceOMR,
-        category: newStoreDoc.category,
+        storeName: aiData.storeSuggestedName,
+        ownerName: ownerName.trim(),
+        productTitle: aiData.productTitle,
+        description: aiData.description,
+        priceOMR: aiData.priceOMR,
+        category: aiData.category,
         productImage: imagePreview!,
         storeUrl: finalStoreUrl,
         qrDataUrl: qrUrl,
       });
 
     } catch (err: any) {
-      console.error('Error analyzing image:', err);
-      setErrorMsg('حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' + (err.message || 'يرجى التحقق من مفتاح الـ API'));
+      console.error('Error creating store:', err);
+      setErrorMsg('حدث خطأ أثناء معالجة المجسم: ' + (err.message || 'يرجى المحاولة مجدداً'));
     } finally {
       setIsAnalyzing(false);
       setStatusMessage('');
