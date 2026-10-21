@@ -109,7 +109,6 @@ const FONT_SIZES: FontSizeOption[] = [
   { id: 'xl', label: 'كبير جداً', cssClass: 'text-[19px] leading-loose', sizePx: '19px' },
 ];
 
-// Dedicated Omani Entrepreneurship & Marketplace Expert System Prompt
 const AWNI_ENTREPRENEURIAL_SYSTEM_INSTRUCTION = `أنت "عوني" (Awni)، كبير المستشارين الاقتصاديين والرياديين والخبراء الوطنيين في سلطنة عُمان لمنصة "مُنتجي" (Montaji).
 أنت مستشار استراتيجي رفيع المستوى يتمتع بخبرة استشارية وتجارية عميقة، ورزانة، وذكاء استراتيجي، وفهم دقيق لمنظومة الأعمال العمانية ورؤية عُمان 2040:
 
@@ -144,7 +143,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
   const [isExpanded, setIsExpanded] = useState(false);
   const [unreadBadge, setUnreadBadge] = useState(true);
 
-  // Chatbot Window Dimensions & Measurements (Standard 480px, Wide 720px, Fullscreen 92vh)
   const [windowSize, setWindowSize] = useState<ChatWindowSize>(() => {
     try {
       const saved = localStorage.getItem('montaji_awni_window_size');
@@ -171,7 +169,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
 
 تفضل بطرح موضوعك أو سؤالك كتابياً أو بالتحدث صوتياً، وأبشر بما يسرك!`;
 
-  // Session conversation history
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'welcome-awni',
@@ -187,7 +184,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
   const [likedId, setLikedId] = useState<string | null>(null);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
 
-  // Chat Typography preferences (Font Size and Font Family) for chat bubbles
   const [fontSize, setFontSize] = useState<ChatFontSize>(() => {
     try {
       const saved = localStorage.getItem('montaji_awni_font_size');
@@ -220,7 +216,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     } catch {}
   };
 
-  // Smart Classification & Archive Manager States
   const { user } = useAuth();
   const [showArchiveManager, setShowArchiveManager] = useState(false);
   const [activeSavedConv, setActiveSavedConv] = useState<SavedAwniConversation | null>(null);
@@ -262,7 +257,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     showToast(`تم حفظ وتصنيف الجلسة في "${AWNI_CATEGORIES.find((c) => c.id === cat)?.name}"! 📁✨`);
   };
 
-  // Voice recording & Google Speech Recognition states
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [isTranscribingVoice, setIsTranscribingVoice] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -278,7 +272,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Quick suggestions tailored for entrepreneurship and marketplace
   const quickSuggestions = [
     {
       label: '📋 شروط بطاقة ريادة 2026',
@@ -306,14 +299,12 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     },
   ];
 
-  // Auto-scroll on new message or during streaming chunks
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isStreaming, isOpen]);
 
-  // Focus input when widget opens
   useEffect(() => {
     if (isOpen) {
       setUnreadBadge(false);
@@ -321,7 +312,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
   }, [isOpen]);
 
-  // Cleanup speech synthesis and timers on unmount
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -338,12 +328,10 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     };
   }, []);
 
-  // Handle sending a message with real-time SSE streaming & session history
   const handleSendMessage = async (textToSend?: string) => {
     const promptText = (textToSend || inputPrompt).trim();
     if (!promptText || isStreaming) return;
 
-    // Create User Message
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -351,7 +339,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
       timestamp: new Date().toLocaleTimeString('ar-OM', { hour: '2-digit', minute: '2-digit' }),
     };
 
-    // Placeholder Model Message for Streaming
     const modelMsgId = `model-${Date.now()}`;
     const initialModelMsg: ChatMessage = {
       id: modelMsgId,
@@ -360,23 +347,19 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
       timestamp: new Date().toLocaleTimeString('ar-OM', { hour: '2-digit', minute: '2-digit' }),
     };
 
-    // Update state with user message and streaming placeholder
     setMessages((prev) => [...prev, userMsg, initialModelMsg]);
     setInputPrompt('');
     setLiveTranscriptPreview('');
     setIsStreaming(true);
 
-    // Setup abort controller for user cancellation
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     try {
-      // Build conversation history for multi-turn session understanding
       const history = messages
         .filter((m) => m.id !== 'welcome-awni' && m.text.trim())
         .map((m) => ({ role: m.role, text: m.text }));
 
-      // Call streaming API
       await AiService.askAwniStream({
         prompt: promptText,
         history,
@@ -416,7 +399,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
   };
 
-  // Stop active generation
   const handleStopStreaming = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -425,20 +407,17 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
   };
 
-  // Copy message text to clipboard
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Like feedback
   const handleLike = (id: string) => {
     setLikedId(id);
     setTimeout(() => setLikedId(null), 2500);
   };
 
-  // Text-To-Speech: Speak Awni's advice in natural Arabic
   const handleToggleSpeak = (text: string, id: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       return;
@@ -451,14 +430,12 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
 
     window.speechSynthesis.cancel();
-    // Clean markdown bold syntax before reading
     const cleanText = text.replace(/[*_#`~>-]/g, '').trim();
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'ar-SA';
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
-    // Pick best Arabic voice if available
     const voices = window.speechSynthesis.getVoices();
     const arVoice = voices.find((v) => v.lang.startsWith('ar'));
     if (arVoice) {
@@ -476,7 +453,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     window.speechSynthesis.speak(utterance);
   };
 
-  // Clear/Reset session conversation history
   const handleResetChat = () => {
     setActiveSavedConv(null);
     if (isStreaming) handleStopStreaming();
@@ -494,14 +470,12 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     ]);
   };
 
-  // Format recording duration mm:ss
   const formatRecordingTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // User clicks microphone icon -> Prompt for permission with clear Google voice info
   const handleMicButtonClick = () => {
     if (isRecordingVoice) {
       stopVoiceRecording();
@@ -511,13 +485,11 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
   };
 
-  // Start voice recording with Google Speech Recognition & MediaRecorder dual-channel
   const confirmAndStartVoiceRecording = async () => {
     setShowMicPermissionModal(false);
     setVoiceError(null);
     setLiveTranscriptPreview('');
 
-    // Check getUserMedia support
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
       setVoiceError('التسجيل الصوتي غير مدعوم في هذا المتصفح. يمكنك كتابة استفسارك مباشرة.');
       setTimeout(() => setVoiceError(null), 5000);
@@ -525,18 +497,14 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
 
     try {
-      // 1. Request microphone permission via browser/Google prompt
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // 2. Try initializing Google Chrome Native Speech Recognition for live real-time Arabic text
       const SpeechRecognition =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-      let recognitionActive = false;
       if (SpeechRecognition) {
         try {
           const recognition = new SpeechRecognition();
-          recognition.lang = 'ar-OM'; // Omani Arabic dialect recognition
+          recognition.lang = 'ar-OM';
           recognition.interimResults = true;
           recognition.continuous = true;
 
@@ -557,13 +525,11 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
 
           recognition.start();
           speechRecognitionRef.current = recognition;
-          recognitionActive = true;
         } catch (recognitionErr) {
-          console.warn('Could not launch speech recognition directly, using recorder fallback:', recognitionErr);
+          console.warn('Speech recognition fallback:', recognitionErr);
         }
       }
 
-      // 3. Setup MediaRecorder as robust fallback / audio chunking
       voiceChunksRef.current = [];
       const mediaRecorder = new MediaRecorder(stream);
       voiceMediaRecorderRef.current = mediaRecorder;
@@ -590,7 +556,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
         const audioBlob = new Blob(voiceChunksRef.current, { type: 'audio/webm' });
         stream.getTracks().forEach((track) => track.stop());
 
-        // If speech recognition already provided words, focus input
         if (inputRef.current?.value && inputRef.current.value.trim().length > 0) {
           setIsTranscribingVoice(false);
           setRecordingDuration(0);
@@ -603,7 +568,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
           return;
         }
 
-        // Otherwise transcribe via server audio transcriber
         setIsTranscribingVoice(true);
         try {
           const reader = new FileReader();
@@ -625,7 +589,7 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
             setTimeout(() => inputRef.current?.focus(), 100);
           }
         } catch (err) {
-          console.warn('Voice transcription note in chat widget:', err);
+          console.warn('Voice transcription error:', err);
         } finally {
           setIsTranscribingVoice(false);
           setRecordingDuration(0);
@@ -643,7 +607,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } catch (err: any) {
-      console.warn('Microphone permission notice:', err?.name || err?.message || err);
       setIsRecordingVoice(false);
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
@@ -657,15 +620,14 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
         (err?.message && String(err.message).toLowerCase().includes('permission denied'));
 
       if (isPermissionDenied) {
-        setVoiceError('تم رفض إذن المايكروفون في المتصفح. يمكنك السماح به بالنقر على رمز القفل 🔒 بجانب عنوان الموقع في Google Chrome.');
+        setVoiceError('تم رفض إذن المايكروفون. يمكنك تفعيله بالنقر على رمز القفل 🔒 في شريط العنوان.');
       } else {
-        setVoiceError('تعذر الوصول إلى المايكروفون حالياً، يمكنك كتابة رسالتك في مربع الاستفسار.');
+        setVoiceError('تعذر الوصول إلى المايكروفون حالياً، يمكنك كتابة رسالتك مباشرة.');
       }
       setTimeout(() => setVoiceError(null), 6000);
     }
   };
 
-  // Stop voice recording and finish
   const stopVoiceRecording = () => {
     if (speechRecognitionRef.current) {
       try {
@@ -683,7 +645,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     }
   };
 
-  // Cancel voice recording without saving
   const cancelVoiceRecording = () => {
     if (speechRecognitionRef.current) {
       try {
@@ -707,7 +668,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     setRecordingDuration(0);
   };
 
-  // Render markdown-like bold text, bullet points, and clean typography
   const renderFormattedText = (text: string, isCurrentStreaming: boolean) => {
     if (!text && isCurrentStreaming) {
       return (
@@ -760,7 +720,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
     );
   };
 
-  // Detect relevant quick links in Awni's replies for high interactivity
   const renderInteractiveChips = (text: string) => {
     const hasMarketplace = text.includes('سوق') || text.includes('منتجات') || text.includes('لبان') || text.includes('عسل') || text.includes('شراء') || text.includes('حلوى') || text.includes('خنجر');
     const hasFeasibility = text.includes('دراسة') || text.includes('جدوى') || text.includes('تكاليف') || text.includes('رأس مال') || text.includes('أرباح');
@@ -770,7 +729,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
 
     return (
       <div className="pt-2.5 mt-2 border-t border-slate-100 flex flex-wrap gap-1.5 items-center">
-        {/* Quick Save to Folders Shortcuts */}
         {hasFeasibility && (
           <button
             onClick={() => handleQuickSaveCurrent('feasibility')}
@@ -848,8 +806,8 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
         isOpen && windowSize === 'fullscreen'
           ? 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-2 sm:p-4 md:p-6 transition-all duration-300 font-sans'
           : isOpen
-          ? 'fixed inset-x-2 bottom-3 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex items-end justify-center sm:block font-sans'
-          : 'fixed bottom-5 right-4 sm:right-6 sm:bottom-6 z-40 font-sans'
+          ? 'fixed inset-x-2 bottom-20 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex items-end justify-center sm:block font-sans'
+          : 'fixed bottom-22 right-4 sm:right-6 sm:bottom-6 z-40 font-sans'
       }
       dir="rtl"
     >
@@ -860,8 +818,8 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
             windowSize === 'fullscreen'
               ? 'w-full max-w-5xl h-[94vh] sm:h-[90vh] animate-in zoom-in-95'
               : windowSize === 'wide'
-              ? 'w-[calc(100vw-20px)] sm:w-[680px] md:w-[720px] h-[82vh] sm:h-[680px] max-h-[88vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95'
-              : 'w-[calc(100vw-20px)] sm:w-[480px] md:w-[500px] h-[80vh] sm:h-[640px] max-h-[88vh] sm:max-h-[86vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95'
+              ? 'w-[calc(100vw-20px)] sm:w-[680px] md:w-[720px] h-[75vh] sm:h-[680px] max-h-[82vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95'
+              : 'w-[calc(100vw-20px)] sm:w-[480px] md:w-[500px] h-[75vh] sm:h-[640px] max-h-[80vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95'
           }`}
         >
           {/* Google Microphone Permission Modal with clean guidance */}
@@ -920,7 +878,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
           {/* Prestigious Executive Header */}
           <div className="bg-gradient-to-r from-[#122e3a] via-[#153e4d] to-[#1f5b70] text-white p-3.5 sm:p-4 flex items-center justify-between border-b border-[#c59b5f]/30 shrink-0">
             <div className="flex items-center gap-3">
-              {/* Bot Avatar */}
               <div className="relative">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#c59b5f] via-[#e9cca0] to-[#dfba83] p-0.5 shadow-md">
                   <div className="w-full h-full bg-[#122e3a] rounded-2xl flex items-center justify-center">
@@ -949,7 +906,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
 
             {/* Header Actions */}
             <div className="flex items-center gap-1">
-              {/* Smart Archive and Folders Button */}
               <button
                 onClick={() => setShowArchiveManager(true)}
                 className="p-1.5 sm:px-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs text-slate-300 hover:text-white hover:bg-white/10"
@@ -959,7 +915,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 <span className="hidden sm:inline text-[11px] font-bold text-[#e9cca0]">الأرشيف والمجلدات</span>
               </button>
 
-              {/* Quick Save current session if active messages exist */}
               {messages.length > 1 && (
                 <button
                   onClick={() => handleQuickSaveCurrent()}
@@ -971,7 +926,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </button>
               )}
 
-              {/* Font Settings Toggle */}
               <button
                 onClick={() => setShowFontSettings(!showFontSettings)}
                 className={`p-1.5 sm:px-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs ${
@@ -985,7 +939,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 <span className="hidden sm:inline text-[11px] font-bold">الخط</span>
               </button>
 
-              {/* Reset Session History */}
               <button
                 onClick={handleResetChat}
                 className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
@@ -994,7 +947,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 <RefreshCw className="w-4 h-4" />
               </button>
 
-              {/* Window Dimensions Preset Controls (قياسي 480px / عريض 720px / كامل) */}
               <div className="hidden sm:flex items-center bg-white/10 rounded-xl p-0.5 border border-white/15 text-[10px]">
                 <button
                   type="button"
@@ -1034,7 +986,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </button>
               </div>
 
-              {/* Fullscreen / Minimize Toggle Button */}
               <button
                 onClick={() => changeWindowSize(windowSize === 'fullscreen' ? 'standard' : 'fullscreen')}
                 className={`p-1.5 sm:px-2 rounded-xl transition-colors cursor-pointer hidden sm:flex items-center gap-1 text-[11px] ${
@@ -1057,7 +1008,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 )}
               </button>
 
-              {/* Close Widget */}
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
@@ -1072,7 +1022,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
           {showFontSettings && (
             <div className="bg-gradient-to-r from-slate-900 via-[#153e4d] to-[#122e3a] text-white p-3 sm:p-3.5 border-b border-[#c59b5f]/40 animate-in slide-in-from-top-2 duration-200 shadow-md shrink-0">
               <div className={isExpanded ? 'max-w-4xl mx-auto w-full space-y-3' : 'w-full space-y-3'}>
-                {/* Header of font panel */}
                 <div className="flex items-center justify-between pb-2 border-b border-white/10">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#e9cca0]">
                     <Type className="w-4 h-4 text-[#c59b5f]" />
@@ -1103,7 +1052,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Font Family Selection */}
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-bold text-slate-300 block">
                       نوع الخط داخل الفقاعات (Font Family):
@@ -1136,7 +1084,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                     </div>
                   </div>
 
-                  {/* Font Size Selection */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-slate-300">
@@ -1193,7 +1140,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                   </div>
                 </div>
 
-                {/* Live Preview Bar */}
                 <div className="pt-1.5 border-t border-white/10 flex items-center justify-between text-xs">
                   <span className="text-[10px] text-slate-400 shrink-0">معاينة حية للفقاعة:</span>
                   <div
@@ -1224,7 +1170,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
             </div>
           )}
 
-          {/* Active Saved Conversation indicator if resumed */}
           {activeSavedConv && (
             <div className="bg-amber-50 px-3 sm:px-4 py-1.5 border-b border-amber-200/90 flex items-center justify-between text-[11px] text-amber-900 shrink-0">
               <div className={isExpanded ? 'max-w-4xl mx-auto w-full flex items-center justify-between' : 'w-full flex items-center justify-between'}>
@@ -1249,7 +1194,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
             </div>
           )}
 
-          {/* Quick Action Navigation Bar */}
           <div className="bg-[#f0f4f6] px-3 sm:px-4 py-2 border-b border-slate-200 shrink-0">
             <div className={isExpanded ? 'max-w-4xl mx-auto w-full flex items-center justify-between text-[11px] overflow-x-auto gap-2' : 'flex items-center justify-between text-[11px] overflow-x-auto gap-2'}>
               <div className="flex items-center gap-1.5 text-slate-600 font-semibold shrink-0">
@@ -1261,7 +1205,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Direct Archive Button */}
                 <button
                   onClick={() => setShowArchiveManager(true)}
                   className="px-2.5 py-1 bg-[#153e4d] hover:bg-[#122e3a] text-[#e9cca0] font-bold rounded-lg border border-[#c59b5f]/40 transition-colors flex items-center gap-1 cursor-pointer"
@@ -1295,7 +1238,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
             </div>
           </div>
 
-          {/* Messages Scroll Area */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gradient-to-b from-[#fbfcfd] to-[#f4f7f8]">
             <div className={isExpanded ? 'max-w-4xl mx-auto w-full space-y-4' : 'w-full space-y-4'}>
               {messages.map((msg, index) => {
@@ -1310,7 +1252,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                       msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    {/* Avatar Icon */}
                     <div
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
                         msg.role === 'user'
@@ -1325,7 +1266,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                       )}
                     </div>
 
-                    {/* Message Bubble with user selected Font Size and Family */}
                     <div
                       className={`rounded-2xl p-3.5 sm:p-4 shadow-xs relative transition-all duration-200 ${
                         isExpanded ? 'max-w-[80%]' : 'max-w-[86%]'
@@ -1358,12 +1298,10 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                       ) : (
                         <>
                           {renderFormattedText(msg.text, isCurrentStreamingMsg)}
-                          {/* Interactive Chips if applicable */}
                           {msg.text && renderInteractiveChips(msg.text)}
                         </>
                       )}
 
-                      {/* Message Footer with Timestamp, Copy, Voice Readout, and Like */}
                       <div
                         className={`flex items-center justify-between pt-1.5 mt-1.5 text-[10px] ${
                           msg.role === 'user'
@@ -1383,7 +1321,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
 
                         {msg.role === 'model' && msg.text && (
                           <div className="flex items-center gap-1">
-                            {/* Text-to-speech speaker button */}
                             <button
                               onClick={() => handleToggleSpeak(msg.text, msg.id)}
                               className={`p-1 rounded-md transition-colors cursor-pointer ${
@@ -1400,7 +1337,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                               )}
                             </button>
 
-                            {/* Like button */}
                             <button
                               onClick={() => handleLike(msg.id)}
                               className={`p-1 rounded-md transition-colors cursor-pointer ${
@@ -1413,7 +1349,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                               <ThumbsUp className="w-3.5 h-3.5" />
                             </button>
 
-                            {/* Copy button */}
                             <button
                               onClick={() => handleCopy(msg.text, msg.id)}
                               className="p-1 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
@@ -1433,7 +1368,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 );
               })}
 
-              {/* Instant typing pulse when waiting for response */}
               {isStreaming && (!messages[messages.length - 1]?.text || messages[messages.length - 1]?.text.length < 5) && (
                 <div className="flex items-center gap-2 p-2.5 bg-amber-50/90 border border-amber-200/70 rounded-2xl text-xs text-amber-900 font-bold animate-pulse max-w-sm">
                   <Zap className="w-4 h-4 text-[#c59b5f] animate-bounce shrink-0" />
@@ -1441,7 +1375,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </div>
               )}
 
-              {/* Quick interactive topic pills */}
               {messages.length <= 3 && !isStreaming && (
                 <div className="pt-2">
                   <span className="text-[11px] font-bold text-slate-500 block mb-2">
@@ -1468,7 +1401,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
           {/* Input & Streaming Controls Bar */}
           <div className="p-3 sm:p-4 bg-white border-t border-slate-200 shrink-0">
             <div className={isExpanded ? 'max-w-4xl mx-auto w-full' : 'w-full'}>
-              {/* Active Voice Recording Indicator & Waveform */}
               {isRecordingVoice && (
                 <div className="mb-2 p-3 bg-gradient-to-r from-emerald-50 via-amber-50 to-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2">
                   <div className="flex items-center gap-2.5">
@@ -1482,7 +1414,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                         {formatRecordingTime(recordingDuration)}
                       </span>
                     </div>
-                    {/* Wave bars animation */}
                     <div className="hidden sm:flex items-center gap-0.5 h-4">
                       {[40, 80, 60, 100, 75, 45, 90, 60, 30].map((h, i) => (
                         <span
@@ -1517,7 +1448,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                 </div>
               )}
 
-              {/* Live voice transcript preview pill */}
               {liveTranscriptPreview && isRecordingVoice && (
                 <div className="mb-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 flex items-center gap-2">
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold shrink-0">
@@ -1557,7 +1487,6 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
                   className="flex-1 bg-slate-50 border border-slate-300 focus:border-[#1f5b70] focus:bg-white rounded-2xl px-4 py-2.5 text-xs sm:text-sm focus:outline-hidden transition-all text-right disabled:opacity-75"
                 />
 
-                {/* Voice button - connects to Google Speech Recognition with browser permissions */}
                 <button
                   type="button"
                   onClick={handleMicButtonClick}
@@ -1622,14 +1551,13 @@ export const AwniChatWidget: React.FC<AwniChatWidgetProps> = ({ onNavigate }) =>
         onSelectConversation={handleSelectSavedConv}
       />
 
-      {/* Floating Trigger Button with badge */}
+      {/* Floating Trigger Button with badge (تم ضبطه على bottom-22 للجوال) */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="group relative bg-gradient-to-r from-[#153e4d] via-[#1f5b70] to-[#122e3a] hover:from-[#122e3a] hover:to-[#153e4d] text-white p-3.5 sm:p-4 rounded-3xl shadow-2xl border-2 border-[#c59b5f]/50 hover:border-[#c59b5f] transition-all transform hover:scale-105 cursor-pointer flex items-center gap-3"
           title="تحدث مع المستشار عوني"
         >
-          {/* Animated Glow Pill */}
           <div className="w-10 h-10 rounded-2xl bg-[#122e3a] border border-[#c59b5f]/50 flex items-center justify-center shadow-inner relative">
             <ShieldCheck className="w-6 h-6 text-[#e9cca0] group-hover:scale-110 transition-transform duration-300" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
