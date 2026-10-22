@@ -46,7 +46,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // التقاط وقراءة الصورة من الكاميرا
+  // التقاط وقراءة الصورة الأصلية بدون أي ضغط أو تقليل جودة
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -54,6 +54,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
+        // حفظ الصورة بدقتها وجودتها الأصلية الكاملة
         setImagePreview(result);
         const base64Data = result.split(',')[1];
         setImageBase64(base64Data);
@@ -139,10 +140,11 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
         }
       }
 
-      setStatusMessage('جارٍ تدشين متجرك الخاص وإدراج المنتج في السوق...');
+      setStatusMessage('جارٍ تدشين متجرك الخاص وإدراج المنتج بدقته الكاملة...');
 
       const uniqueStoreId = 'store-' + Date.now().toString().slice(-6);
 
+      // حفظ الصورة الأصلية الكاملة في بيانات المتجر
       const storeRecord: CustomStore = {
         storeId: uniqueStoreId,
         storeName: aiData.storeSuggestedName,
@@ -152,7 +154,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
         description: aiData.description,
         priceOMR: aiData.priceOMR,
         category: aiData.category,
-        productImage: imagePreview!,
+        productImage: imagePreview!, // الصورة الأصلية الكاملة
         createdAt: new Date().toLocaleDateString('ar-OM'),
       };
 
@@ -321,7 +323,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
             </div>
           </div>
         ) : (
-          /* واجهة المتجر الخاص للعميل بعد التدشين مع منتجه وسعره */
+          /* واجهة المتجر الخاص للعميل بعد التدشين مع منتجه وسعره بدقة كاملة */
           <div className="space-y-4 animate-in fade-in duration-300">
             {/* إشعار النجاح */}
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between gap-2">
@@ -362,7 +364,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
                   </span>
                 </div>
 
-                {/* صورة المنتج التي رفعها العميل مع السعر البارز */}
+                {/* صورة المنتج التي رفعها العميل بالدقة الكاملة بدون أي ضغط مع السعر البارز */}
                 <div className="relative rounded-2xl overflow-hidden border-2 border-slate-200 aspect-square sm:aspect-video bg-slate-100 shadow-sm">
                   <img
                     src={createdStore.productImage}
@@ -394,7 +396,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
                     href={`https://wa.me/${createdStore.phoneNumber.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow cursor-pointer"
                   >
                     <span>طلب عبر واتساب</span>
                   </a>
