@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   ShoppingBag as CartIcon,
 } from 'lucide-react';
+import { processAndCompressImage } from '../utils/imageUpload';
 
 interface KioskStoreCreatorProps {
   onBack?: () => void;
@@ -46,20 +47,30 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // التقاط وقراءة الصورة الأصلية بدون أي ضغط أو تقليل جودة
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ضغط ومعالجة الصورة المباشرة لتفادي انهيار الذاكرة وتسريع الذكاء الاصطناعي
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageMimeType(file.type || 'image/jpeg');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        // حفظ الصورة بدقتها وجودتها الأصلية الكاملة
-        setImagePreview(result);
-        const base64Data = result.split(',')[1];
+      try {
+        setErrorMsg('');
+        // ضغط ذكي بدقة ممتازة وجودة 85% لتقليل الحجم وتسريع الرفع
+        const compressed = await processAndCompressImage(file, 1000, 0.85);
+        setImagePreview(compressed.dataUrl);
+        setImageMimeType('image/jpeg');
+        const base64Data = compressed.dataUrl.split(',')[1];
         setImageBase64(base64Data);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        // بديل احتياطي إذا لم تكتمل المعالجة
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          setImagePreview(result);
+          setImageMimeType(file.type || 'image/jpeg');
+          const base64Data = result.split(',')[1];
+          setImageBase64(base64Data);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -140,11 +151,10 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
         }
       }
 
-      setStatusMessage('جارٍ تدشين متجرك الخاص وإدراج المنتج بدقته الكاملة...');
+      setStatusMessage('جارٍ تدشين متجرك الخاص وعرض المنتج...');
 
       const uniqueStoreId = 'store-' + Date.now().toString().slice(-6);
 
-      // حفظ الصورة الأصلية الكاملة في بيانات المتجر
       const storeRecord: CustomStore = {
         storeId: uniqueStoreId,
         storeName: aiData.storeSuggestedName,
@@ -154,18 +164,18 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
         description: aiData.description,
         priceOMR: aiData.priceOMR,
         category: aiData.category,
-        productImage: imagePreview!, // الصورة الأصلية الكاملة
+        productImage: imagePreview!,
         createdAt: new Date().toLocaleDateString('ar-OM'),
       };
 
-      // حفظ المتجر في سجلات المتصفح المحلية
+      // حفظ آمن في الذاكرة المحلية مع حماية كاملة من الأخطاء
       try {
         const currentStores = JSON.parse(localStorage.getItem('montji_user_stores') || '[]');
         currentStores.unshift(storeRecord);
         localStorage.setItem('montji_user_stores', JSON.stringify(currentStores));
         localStorage.setItem('montji_active_store', JSON.stringify(storeRecord));
       } catch (err) {
-        console.warn('LocalStorage error:', err);
+        console.warn('LocalStorage limit exceeded, proceeding smoothly:', err);
       }
 
       setCreatedStore(storeRecord);
@@ -323,7 +333,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
             </div>
           </div>
         ) : (
-          /* واجهة المتجر الخاص للعميل بعد التدشين مع منتجه وسعره بدقة كاملة */
+          /* واجهة المتجر الخاص للعميل بعد التدشين مع منتجه وسعره */
           <div className="space-y-4 animate-in fade-in duration-300">
             {/* إشعار النجاح */}
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between gap-2">
@@ -364,7 +374,7 @@ export const KioskStoreCreator: React.FC<KioskStoreCreatorProps> = ({ onBack, on
                   </span>
                 </div>
 
-                {/* صورة المنتج التي رفعها العميل بالدقة الكاملة بدون أي ضغط مع السعر البارز */}
+                {/* صورة المنتج مع السعر البارز */}
                 <div className="relative rounded-2xl overflow-hidden border-2 border-slate-200 aspect-square sm:aspect-video bg-slate-100 shadow-sm">
                   <img
                     src={createdStore.productImage}
