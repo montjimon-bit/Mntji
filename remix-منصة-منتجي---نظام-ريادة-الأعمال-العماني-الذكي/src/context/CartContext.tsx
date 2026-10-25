@@ -11,7 +11,7 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db, auth, OperationType, handleFirestoreError } from '../services/firebase';
+import { db, OperationType, handleFirestoreError } from '../services/firebase';
 import { Product, PRODUCTS_DATA } from '../data/mockData';
 import { useAuth } from './AuthContext';
 
@@ -146,6 +146,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 isRiyadaCertified: Boolean(data.isRiyadaCertified),
                 rating: Number(data.rating) || 4.8,
               },
+              sellerId: data.sellerId || '',
+              sellerEmail: data.sellerEmail || '',
               image: data.image || '',
               stock: Number(data.stock) || 10,
               featured: Boolean(data.featured),
@@ -153,7 +155,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           setProducts(loadedProducts);
         } else {
-          // Seed initial products into Firestore if database collection is empty
+          // تحميل المنتجات التأسيسية لحسابك كمدير للمنصة
           PRODUCTS_DATA.forEach(async (prod) => {
             try {
               await setDoc(doc(db, 'products', prod.id), {
@@ -164,6 +166,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 category: prod.category,
                 governorate: prod.governorate,
                 sellerName: prod.seller.name,
+                sellerId: 'hudifamoosa2007',
+                sellerEmail: 'hudifamoosa2007@gmail.com', // حسابك الرئيسي
                 isRiyadaCertified: prod.seller.isRiyadaCertified,
                 rating: prod.seller.rating,
                 image: prod.image,
@@ -189,8 +193,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user) return;
 
-    if (isAdmin) {
-      // Admin sees ALL orders
+    if (isAdmin || user.email === 'hudifamoosa2007@gmail.com') {
       const ordersColRef = collection(db, 'orders');
       const unsubscribe = onSnapshot(
         ordersColRef,
@@ -208,7 +211,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
       return () => unsubscribe();
     } else {
-      // Normal user sees their own orders
       const ordersQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
       const unsubscribe = onSnapshot(
         ordersQuery,
@@ -327,7 +329,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'تم الاستلام',
     };
 
-    // Save to Firestore Database
     try {
       await setDoc(doc(db, 'orders', orderId), {
         ...newOrder,
@@ -340,7 +341,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOrders((prev) => [newOrder, ...prev]);
     setLastOrder(newOrder);
 
-    // Save to localStorage as well
     try {
       const existingSaved = JSON.parse(localStorage.getItem('montaji_orders') || '[]');
       localStorage.setItem('montaji_orders', JSON.stringify([newOrder, ...existingSaved]));
@@ -367,6 +367,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // دالة إضافة المنتج مع تسجيل بريد البائع ومعرفه
   const addNewProduct = async (productData: Omit<Product, 'id'>) => {
     const newId = `prod-${Date.now()}`;
     const productRef = doc(db, 'products', newId);
@@ -379,7 +380,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         category: productData.category,
         governorate: productData.governorate,
         sellerName: productData.seller.name,
-        sellerId: user?.uid || 'admin',
+        sellerId: user?.uid || 'guest-seller',
+        sellerEmail: user?.email || '', // حفظ بريد المستخدم الحالي بدقة
         isRiyadaCertified: productData.seller.isRiyadaCertified,
         rating: 5.0,
         image: productData.image,
