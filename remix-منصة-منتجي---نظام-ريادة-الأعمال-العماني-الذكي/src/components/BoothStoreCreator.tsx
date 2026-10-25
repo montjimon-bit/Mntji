@@ -11,9 +11,11 @@ import {
   ShoppingBag,
   RefreshCw,
   AlertCircle,
+  LogIn,
 } from 'lucide-react';
 import { processAndCompressImage } from '../utils/imageUpload';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface BoothStoreCreatorProps {
   onSuccessNavigate?: (view: string) => void;
@@ -36,18 +38,31 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
   className = '',
 }) => {
   const { addNewProduct } = useCart();
+  const { user, userProfile, signInWithGoogle, saveUserProfileDetails } = useAuth();
+
   const [isOpen, setIsOpen] = useState(false);
-  const [visitorName, setVisitorName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [visitorName, setVisitorName] = useState(userProfile?.displayName || user?.displayName || '');
+  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phone || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // بيانات المتجر بعد الإنشاء
+  // بيانات المتجر بعد تدشينه كبائع
   const [createdStore, setCreatedStore] = useState<CreatedStoreData | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // تحديث الاسم تلقائياً إذا سجل دخوله
+  React.useEffect(() => {
+    if (userProfile?.displayName && !visitorName) {
+      setVisitorName(userProfile.displayName);
+    }
+    if (userProfile?.phone && !phoneNumber) {
+      setPhoneNumber(userProfile.phone);
+    }
+  }, [userProfile]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,17 +82,37 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
     }
   };
 
+  // تسجيل دخول إجباري عبر Google ليصبح بائعاً موثقاً
+  const handleGoogleAuth = async () => {
+    setIsLoggingIn(true);
+    setErrorMessage('');
+    try {
+      await signInWithGoogle('seller');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage('تعذر تسجيل الدخول عبر Google، يرجى المحاولة مرة أخرى.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const handleCreateStoreNow = async () => {
+    // 1. التحقق الإجباري من تسجيل الدخول
+    if (!user) {
+      setErrorMessage('يجب تسجيل الدخول أولاً لإنشاء متجرك كبائع معتمد في المنصة.');
+      return;
+    }
+
     if (!visitorName.trim()) {
-      setErrorMessage('يرجى كتابة اسمك الكريم');
+      setErrorMessage('يرجى كتابة اسمك الكريم أو اسم المتجر.');
       return;
     }
     if (!phoneNumber.trim()) {
-      setErrorMessage('يرجى كتابة رقم هاتفك للتواصل');
+      setErrorMessage('يرجى كتابة رقم الهاتف للتواصل واستقبال الطلبات.');
       return;
     }
     if (!imagePreview) {
-      setErrorMessage('يرجى التقاط صورة للمنتج');
+      setErrorMessage('يرجى التقاط صورة للمنتج بكاميرا الهاتف.');
       return;
     }
 
@@ -88,17 +123,29 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
     const calculatedPrice = 15.0;
     const generatedTitle = `ابتكار ${visitorName.trim()}`;
     const storeTitle = `متجر ${visitorName.trim()}`;
-    const productDesc = `منتج وابتكار وطني تم تدشينه بواسطة ${visitorName.trim()} عبر منصة مُنتجي.`;
+    const productDesc = `منتج وطني مبتكر تم تدشينه بواسطة ${visitorName.trim()} عبر منصة مُنتجي.`;
 
     try {
-      // محاولة إضافة المنتج للسوق العام في CartContext
+      // 2. تحديث بروفايل المستخدم ليصبح بائعاً (Seller) معتمد مع اسم المتجر ورقم هاتفه
+      try {
+        await saveUserProfileDetails({
+          role: 'seller',
+          storeName: storeTitle,
+          phone: phoneNumber.trim(),
+          displayName: visitorName.trim(),
+        });
+      } catch (profileErr) {
+        console.warn('تحديث الملف الشخصي:', profileErr);
+      }
+
+      // 3. رفع المنتج وحفظه رسمياً في Firestore كسجل بائع حقيقي في المنصة
       try {
         await addNewProduct({
           title: generatedTitle,
           description: productDesc,
           price: calculatedPrice,
           category: 'تقنية وابتكار',
-          governorate: 'محافظة مسقط',
+          governorate: userProfile?.governorate || 'محافظة مسقط',
           seller: {
             name: storeTitle,
             isRiyadaCertified: true,
@@ -109,10 +156,10 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
           featured: true,
         });
       } catch (saveErr) {
-        console.warn('تنبيه حفظ السيرفر (تم التخطي لضمان عرض المتجر للعميل):', saveErr);
+        console.warn('تنبيه حفظ المنتج:', saveErr);
       }
 
-      // الانتقال المباشر لواجهة المتجر الخاص بالعميل
+      // 4. حفظ المتجر في الذاكرة لعرضه مباشرة للعميل
       setCreatedStore({
         storeName: storeTitle,
         ownerName: visitorName.trim(),
@@ -123,17 +170,16 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
         image: cleanImg,
         category: 'تقنية وابتكار',
       });
+
     } catch (err: any) {
       console.error(err);
-      setErrorMessage('حدث خطأ غير متوقع، يرجى المحاولة ثانية.');
+      setErrorMessage('حدث خطأ أثناء تدشين المتجر، يرجى المحاولة ثانية.');
     } finally {
       setLoading(false);
     }
   };
 
   const resetAll = () => {
-    setVisitorName('');
-    setPhoneNumber('');
     setImageFile(null);
     setImagePreview(null);
     setCreatedStore(null);
@@ -143,20 +189,20 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
 
   return (
     <div className={`w-full ${className}`} dir="rtl">
-      {/* البانر التفاعلي بالصفحة الرئيسية */}
+      {/* 1. البانر التفاعلي في الصفحة الرئيسية */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1b4d5e] via-[#2a768e] to-[#1b4d5e] p-6 sm:p-8 text-white shadow-2xl border border-[#d4ab71]/40">
         <div className="absolute -top-10 -left-10 w-44 h-44 bg-[#d4ab71]/20 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-right">
             <div className="inline-flex items-center gap-2 bg-[#d4ab71]/20 border border-[#d4ab71]/50 px-3 py-1 rounded-full text-[#ebd0a3] text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>خدمة زوار المعارض والبوث</span>
+              <span>ميزة زوار البوث ورواد الأعمال 🇴🇲</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-black text-white">
-              شكّل مجسمك بالبوث وافتح متجرك في "مُنتجي" فوراً 🇴🇲
+              شكّل مجسمك بالبوث وسجّل كبائع في "مُنتجي" فوراً
             </h3>
             <p className="text-xs sm:text-sm text-slate-200 max-w-xl leading-relaxed">
-              صوّر أي مجسم أو منتج صنعته، وافتح متجرك الخاص باسمك مع عرض منتجك وسعره ورقم هاتفك مباشرة للزبائن.
+              صوّر منتجك، وسجل دخولك لتصبح بائعاً رسمياً في المنصة مع متجر خاص بك ومنتج معروض في السوق الوطني.
             </p>
           </div>
 
@@ -166,12 +212,12 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
             className="shrink-0 px-6 py-4 bg-[#d4ab71] hover:bg-[#ebd0a3] text-slate-950 font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 cursor-pointer text-sm"
           >
             <Camera className="w-5 h-5 text-slate-900" />
-            <span>صوّر وافتح متجرك الآن</span>
+            <span>صوّر وافتح متجرك كبائع</span>
           </button>
         </div>
       </div>
 
-      {/* نافذة التصوير وعرض المتجر */}
+      {/* 2. النافذة المنبثقة: تسجيل الدخول + إدخال البيانات + المتجر المعتمد */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#0f242e] border border-slate-200 dark:border-slate-700 rounded-3xl p-5 sm:p-7 max-w-lg w-full space-y-4 text-right shadow-2xl relative my-auto">
@@ -185,25 +231,62 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
             </button>
 
             {!createdStore ? (
-              /* نموذج الإدخال */
               <>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-[#2a768e] dark:text-[#ebd0a3] font-bold text-xs">
                     <Store className="w-4 h-4" />
-                    <span>تدشين متجر رائد الأعمال الفوري</span>
+                    <span>التسجيل كبائع معتمد في منصة مُنتجي</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                    افتح متجرك واعرض منتجك الآن
+                    تدشين متجرك وعرض منتجك في السوق
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    أدخل بياناتك وصوّر منتجك ليتم تدشين المتجر باسمك
+                    يلزم تسجيل الدخول لتوثيق ملكية المتجر وإدراجه في قائمة البائعين
                   </p>
                 </div>
 
-                <div className="space-y-3.5 pt-1">
+                {/* شرط تسجيل الدخول الإجباري */}
+                {!user ? (
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-center space-y-3 my-2">
+                    <p className="text-xs text-amber-900 dark:text-amber-200 font-bold">
+                      يرجى تسجيل الدخول بحساب Google لتوثيق متجرك وحفظ منتجاتك كبائع معتمد
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleGoogleAuth}
+                      disabled={isLoggingIn}
+                      className="w-full py-3 bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-xl border border-slate-300 shadow-sm flex items-center justify-center gap-2 text-xs transition cursor-pointer"
+                    >
+                      {isLoggingIn ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-slate-700 border-t-transparent rounded-full animate-spin" />
+                          <span>جارٍ الاتصال بحساب Google...</span>
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="w-4 h-4 text-[#2a768e]" />
+                          <span>تسجيل الدخول السريع عبر Google</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>مسجل دخولك باسم: {user.displayName || user.email}</span>
+                    </div>
+                    <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
+                      بائع معتمد ✓
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-3 pt-1">
+                  {/* اسم صاحب المتجر */}
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      اسمك الكريم (صاحب المتجر):
+                      اسم صاحب المتجر:
                     </label>
                     <div className="relative">
                       <input
@@ -217,9 +300,10 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                     </div>
                   </div>
 
+                  {/* الهاتف */}
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      رقم الهاتف (للتواصل والطلبات):
+                      رقم الهاتف لتواصل الزبائن والطلبات:
                     </label>
                     <div className="relative">
                       <input
@@ -234,6 +318,7 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                     </div>
                   </div>
 
+                  {/* التقاط الصورة */}
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       صورة المنتج أو المجسم:
@@ -252,7 +337,7 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                         <img
                           src={imagePreview}
                           alt="معاينة المنتج"
-                          className="h-44 w-full object-cover rounded-xl"
+                          className="h-40 w-full object-cover rounded-xl"
                         />
                         <button
                           type="button"
@@ -267,16 +352,13 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-[#2a768e] dark:hover:border-[#d4ab71] rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition bg-slate-50 dark:bg-[#16303d]/40"
+                        className="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-[#2a768e] dark:hover:border-[#d4ab71] rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition bg-slate-50 dark:bg-[#16303d]/40"
                       >
-                        <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-xs flex items-center justify-center">
-                          <Camera className="w-5 h-5 text-[#2a768e] dark:text-[#d4ab71]" />
+                        <div className="w-9 h-9 rounded-full bg-white dark:bg-slate-800 shadow-xs flex items-center justify-center">
+                          <Camera className="w-4 h-4 text-[#2a768e] dark:text-[#d4ab71]" />
                         </div>
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                           اضغط لفتح الكاميرا وتصوير المنتج
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          سيتم وضعه في متجرك الخاص فوراً
                         </span>
                       </button>
                     )}
@@ -293,32 +375,32 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                 <button
                   type="button"
                   onClick={handleCreateStoreNow}
-                  disabled={loading || !visitorName.trim() || !phoneNumber.trim() || !imagePreview}
+                  disabled={loading || !user || !visitorName.trim() || !phoneNumber.trim() || !imagePreview}
                   className="w-full py-3.5 bg-[#d4ab71] hover:bg-[#ebd0a3] text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-lg disabled:opacity-50 transition cursor-pointer flex items-center justify-center gap-2 mt-2"
                 >
                   {loading ? (
                     <>
                       <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>جارٍ بناء متجرك وإدراج منتجك...</span>
+                      <span>جارٍ توثيق الحساب وإدراجك كبائع في المنصة...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-slate-950" />
-                      <span>افتح متجري واعرض المنتج الآن ✨</span>
+                      <span>تدشين متجري كبائع وعرض المنتج فوراً ✨</span>
                     </>
                   )}
                 </button>
               </>
             ) : (
-              /* واجهة المتجر الخاص للعميل بعد الضغط */
+              /* واجهة المتجر كبائع رسمي دائم في المنصة */
               <div className="space-y-4 pt-1 animate-in zoom-in-95 duration-200">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-emerald-800 text-xs font-black">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>تم تدشين متجرك بنجاح يا {createdStore.ownerName}!</span>
+                    <span>تم تدشين حسابك كبائع معتمد في منصة مُنتجي!</span>
                   </div>
                   <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
-                    متجر نشط 🟢
+                    بائع معتمد 🇴🇲
                   </span>
                 </div>
 
@@ -326,7 +408,7 @@ export const BoothStoreCreator: React.FC<BoothStoreCreatorProps> = ({
                   <div className="bg-gradient-to-r from-[#122e3a] via-[#1b4d5e] to-[#122e3a] p-4 text-white text-center border-b border-[#c59b5f]/40">
                     <span className="inline-flex items-center gap-1 bg-[#c59b5f]/20 border border-[#c59b5f]/60 text-[#dfba83] text-[9px] font-bold px-2.5 py-0.5 rounded-full mb-1.5">
                       <ShieldCheck className="w-3 h-3 text-[#c59b5f]" />
-                      <span>متجر معتمد • منصة مُنتجي 🇴🇲</span>
+                      <span>متجر وطني معتمد • مُنتجي 🇴🇲</span>
                     </span>
                     <h3 className="text-lg font-black text-white">{createdStore.storeName}</h3>
                     <p className="text-xs text-[#dfba83] mt-0.5 font-medium">
