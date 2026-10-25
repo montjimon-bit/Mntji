@@ -99,7 +99,6 @@ const GOVERNORATE_SALES_DATA = [
   { name: 'محافظات أخرى', value: 5, amount: 2750, fill: '#8b5cf6' },
 ];
 
-// Sleek Custom Tooltip for Sales Charts
 const CustomSalesTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -132,7 +131,6 @@ const CustomSalesTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Sleek Custom Tooltip for Forecast Charts
 const CustomForecastTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -241,11 +239,26 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
   const unitContribution = Math.max(1, calcUnitPrice - calcUnitCost);
   const breakevenUnits = Math.ceil(calcMonthlyOpex / unitContribution);
   const breakevenRevenue = (breakevenUnits * calcUnitPrice).toLocaleString('ar-OM');
-  const estimatedPaybackMonths = Math.max(1, Math.round(calcInitialCapital / (calcMonthlyOpex * 0.8)));
 
-  const currentStoreName = 'منصة مُنتجي الوطنية';
+  const currentStoreName = userProfile?.storeName || (user?.displayName ? `متجر ${user.displayName}` : 'منصة مُنتجي الوطنية');
 
-  const myStoreProducts = products;
+  // فلترة المنتجات: إذا كان الإيميل هو إيميلك الرئيسي تظهر كل منتجات السوق، وإذا كان بائعاً آخراً يرى فقط ما صوره
+  const isMasterAdmin = user?.email === 'hudifamoosa2007@gmail.com' || isAdmin;
+
+  const myStoreProducts = useMemo(() => {
+    if (!user) return [];
+    if (isMasterAdmin) {
+      // حسابك الأساسي يرى جميع منتجات المنصة
+      return products;
+    }
+    // البائع العادي يرى فقط المنتجات التابعة لمعرفه أو إيميله
+    return products.filter((prod: any) => {
+      const matchId = prod.sellerId && prod.sellerId === user.uid;
+      const matchEmail = prod.sellerEmail && prod.sellerEmail.toLowerCase() === (user.email || '').toLowerCase();
+      const matchLegacyName = userProfile?.storeName && prod.seller?.name === userProfile.storeName;
+      return matchId || matchEmail || matchLegacyName;
+    });
+  }, [products, user, isMasterAdmin, userProfile]);
 
   const totalRevenue = useMemo(() => {
     return MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.revenue, 0);
@@ -297,7 +310,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
     setTimeout(() => setStatusChangeToast(null), 3000);
   };
 
-  // IF GUEST (NOT LOGGED IN)
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-6" dir="rtl">
@@ -307,7 +319,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-[#153e4d]">لوحة تحكم رائد الأعمال والمشاريع</h2>
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            يرجى تسجيل الدخول بحساب Google أو بريدك الإلكتروني للوصول إلى مؤشرات المبيعات، توقعات الربحية (Recharts)، وإدارة منتجاتك.
+            يرجى تسجيل الدخول بحساب Google أو بريدك الإلكتروني للوصول إلى مؤشرات المبيعات، توقعات الربحية، وإدارة منتجاتك.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -331,8 +343,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
     );
   }
 
-  // IF USER IS CUSTOMER (NOT SELLER & NOT ADMIN)
-  if (user && isCustomer && !isAdmin) {
+  if (user && isCustomer && !isMasterAdmin) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-6" dir="rtl">
         <div className="w-16 h-16 rounded-3xl bg-blue-50 text-[#1f5b70] flex items-center justify-center mx-auto shadow-md border border-blue-200">
@@ -344,7 +355,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
           <h2 className="text-2xl font-black text-[#153e4d]">المتاجر الخاصة مخصصة للبائعين فقط</h2>
           <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
-            مرحباً {user.displayName || 'بك'}! حسابك الحالي مسجل كـ <strong>عميل (مشتري)</strong> يتيح لك تصفح آلاف المنتجات العمانية والشراء المباشر وتتبع طلباتك. لوحة تحكم المتجر وإضافة المنتجات مخصصة للبائعين ورواد الأعمال.
+            مرحباً {user.displayName || 'بك'}! حسابك الحالي مسجل كـ <strong>عميل (مشتري)</strong>. لوحة تحكم المتجر وإدارة المنتجات مخصصة للبائعين ورواد الأعمال.
           </p>
         </div>
 
@@ -380,23 +391,13 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
             <ShoppingBag className="w-4 h-4 text-[#c59b5f]" />
             <span>تصفح سوق المنتجات والشراء</span>
           </button>
-          <button
-            type="button"
-            onClick={() => onNavigate('orders.html')}
-            className="w-full sm:w-auto px-6 py-3 bg-white border border-slate-300 text-slate-800 rounded-2xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2"
-          >
-            <Clock className="w-4 h-4 text-slate-500" />
-            <span>متابعة مشترياتي وطلباتي</span>
-          </button>
         </div>
       </div>
     );
   }
 
-  // LOGGED IN VIEW (FOR SELLERS & ADMIN)
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8" dir="rtl">
-      {/* Toast Notification */}
       {statusChangeToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#153e4d] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold border border-[#c59b5f]/40 animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="w-4 h-4 text-[#dfba83]" />
@@ -404,34 +405,36 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         </div>
       )}
 
-      {/* Top Hero Card for Store Owner / Admin */}
+      {/* الترويسة العلوية */}
       <div className="relative overflow-hidden rounded-3xl bg-radial from-[#153e4d] to-[#0d232d] text-white p-6 sm:p-8 border border-[#1f5b70]/40 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 bg-[#c59b5f]/20 border border-[#c59b5f]/40 text-[#dfba83] px-3 py-1 rounded-full text-xs font-bold">
-              {isAdmin ? (
+              {isMasterAdmin ? (
                 <>
                   <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>المشرف العام للنظام (Admin: hudifamoosa2007@gmail.com) 👑</span>
+                  <span>المشرف العام للنظام والمنصة (hudifamoosa2007@gmail.com) 👑</span>
                 </>
               ) : (
                 <>
                   <Award className="w-3.5 h-3.5 text-[#dfba83]" />
-                  <span>عضو معتمد في منصة مُنتجي الوطنية · بطاقة ريادة 2026 ✓</span>
+                  <span>بائع معتمد في منصة مُنتجي الوطنية 🇴🇲</span>
                 </>
               )}
             </div>
 
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {isAdmin ? 'لوحة القيادة العليا ومراقبة المنتجات' : (user?.displayName ? `لوحة تحكم رائد الأعمال: ${user.displayName}` : 'لوحة تحكم رائد الأعمال')}
+                {isMasterAdmin
+                  ? 'لوحة إدارة المنتجات العامة والمشرف العام'
+                  : `متجر البائع: ${currentStoreName}`}
               </h1>
             </div>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              {isAdmin
-                ? 'إشراف شامل على جميع المنتجات، الطلبات الوطنية، ومؤشرات الأداء المالي.'
-                : 'متابعة مؤشرات مبيعات مشروعك، الرسوم البيانية التفاعلية (Recharts)، إدارة المخزون، والجدوى الاقتصادية.'}
+              {isMasterAdmin
+                ? 'إشراف شامل على جميع المنتجات الافتراضية والوطنية، الطلبات، ومؤشرات الأداء.'
+                : 'إدارة المنتجات والمجسمات التي قمت بتصويرها وتدشينها، ومتابعة مبيعاتها واستقبال الطلبات.'}
             </p>
           </div>
 
@@ -443,7 +446,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               <div className="text-right">
                 <div className="text-xs font-bold text-white line-clamp-1">{user.displayName || user.email}</div>
                 <div className="text-[10px] text-[#dfba83] font-semibold">
-                  {isAdmin ? 'المشرف العام (Admin 👑)' : 'عضو مسجل في المنصة 🇴🇲'}
+                  {isMasterAdmin ? 'المدير العام للمنصة 👑' : 'بائع نشط 🟢'}
                 </div>
               </div>
             </div>
@@ -454,18 +457,17 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               className="px-4 py-3 bg-[#c59b5f] hover:bg-[#dfba83] text-slate-950 font-black text-xs rounded-2xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>إضافة منتج للمنصة</span>
+              <span>إضافة منتج لمتجري</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards Row */}
+      {/* صف بطاقات المؤشرات */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Annual Revenue */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">إجمالي المبيعات بالمنصة</span>
+            <span className="text-xs font-bold">إجمالي المبيعات</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
@@ -479,7 +481,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
         </div>
 
-        {/* Total Net Profit */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold">صافي الأرباح المحققة</span>
@@ -496,7 +497,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
         </div>
 
-        {/* Total Orders */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold">إجمالي طلبات الشراء</span>
@@ -513,10 +513,12 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
         </div>
 
-        {/* Products KPI */}
+        {/* عدد المنتجات التابعة لهذا الحساب تحديداً */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">المنتجات المعروضة بالمنصة</span>
+            <span className="text-xs font-bold">
+              {isMasterAdmin ? 'جميع منتجات المنصة' : 'منتجات متجري المعروضة'}
+            </span>
             <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <Package className="w-4 h-4" />
             </div>
@@ -526,12 +528,12 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-600 font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>معروضة للمشترين الآن</span>
+            <span>{isMasterAdmin ? 'ظاهرة في السوق' : 'مصورة ومعروضة باسمك'}</span>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* أزرار التبويبات */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto text-xs font-bold">
         <button
           type="button"
@@ -543,7 +545,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           }`}
         >
           <BarChart3 className="w-4 h-4 text-[#dfba83]" />
-          <span>مؤشرات المبيعات والربحية (Recharts)</span>
+          <span>مؤشرات المبيعات والربحية</span>
         </button>
 
         <button
@@ -556,7 +558,9 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           }`}
         >
           <Package className="w-4 h-4 text-[#dfba83]" />
-          <span>المنتجات الوطنية ({myStoreProducts.length})</span>
+          <span>
+            {isMasterAdmin ? `منتجات المنصة (${myStoreProducts.length})` : `منتجاتي الخاصة (${myStoreProducts.length})`}
+          </span>
         </button>
 
         <button
@@ -595,14 +599,13 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           }`}
         >
           <PlusCircle className="w-4 h-4" />
-          <span>إضافة منتج للمنصة</span>
+          <span>إضافة منتج لمتجري</span>
         </button>
       </div>
 
-      {/* TAB 1: RECHARTS ANALYTICS */}
+      {/* التبويب 1: الرسوم البيانية */}
       {activeTab === 'analytics' && (
         <div className="space-y-8 animate-in fade-in">
-          {/* Main Sales Growth Chart */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
@@ -619,7 +622,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                 </p>
               </div>
 
-              {/* Chart Type Controls */}
               <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl text-xs font-bold self-start">
                 <button
                   type="button"
@@ -651,7 +653,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               </div>
             </div>
 
-            {/* Recharts Render Container */}
             <div className="h-[360px] w-full" dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
                 {salesChartType === 'area' ? (
@@ -670,16 +671,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                     <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
                     <YAxis stroke="#64748b" fontSize={11} tickLine={false} unit=" ر.ع." />
                     <Tooltip content={<CustomSalesTooltip />} />
-                    <Legend
-                      verticalAlign="top"
-                      height={36}
-                      formatter={(val) => {
-                        if (val === 'revenue') return 'إجمالي المبيعات (ر.ع.)';
-                        if (val === 'profit') return 'صافي الربح (ر.ع.)';
-                        if (val === 'cost') return 'تكاليف المنتجات (ر.ع.)';
-                        return val;
-                      }}
-                    />
+                    <Legend verticalAlign="top" height={36} />
                     <Area type="monotone" dataKey="revenue" name="إجمالي المبيعات" stroke="#1f5b70" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" />
                     <Area type="monotone" dataKey="profit" name="صافي الأرباح" stroke="#c59b5f" strokeWidth={2.5} fillOpacity={1} fill="url(#colorProfit)" />
                   </AreaChart>
@@ -689,11 +681,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                     <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
                     <YAxis stroke="#64748b" fontSize={11} tickLine={false} unit=" ر.ع." />
                     <Tooltip content={<CustomSalesTooltip />} />
-                    <Legend
-                      verticalAlign="top"
-                      height={36}
-                      formatter={(val) => (val === 'revenue' ? 'المبيعات' : val === 'profit' ? 'صافي الربح' : 'التكاليف')}
-                    />
+                    <Legend verticalAlign="top" height={36} />
                     <Bar dataKey="revenue" name="إجمالي المبيعات" fill="#153e4d" radius={[6, 6, 0, 0]} />
                     <Bar dataKey="profit" name="صافي الأرباح" fill="#c59b5f" radius={[6, 6, 0, 0]} />
                     <Bar dataKey="cost" name="التكاليف" fill="#94a3b8" radius={[6, 6, 0, 0]} />
@@ -712,89 +700,24 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Regional Sales Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm space-y-5">
-              <h4 className="text-sm sm:text-base font-black text-[#153e4d] flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#c59b5f]" />
-                <span>توقعات نمو الأرباح الإجمالية (2025 - 2027)</span>
-              </h4>
-              <div className="h-[280px] w-full" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={PROFITABILITY_FORECAST_DATA} margin={{ top: 10, right: 15, left: 10, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorFcRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#008450" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#008450" stopOpacity={0.05} />
-                      </linearGradient>
-                      <linearGradient id="colorFcProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#dfba83" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#dfba83" stopOpacity={0.1} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="quarter" stroke="#64748b" fontSize={10} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} unit=" ر.ع." />
-                    <Tooltip content={<CustomForecastTooltip />} />
-                    <Area type="monotone" dataKey="expectedRevenue" name="الإيرادات المتوقعة" stroke="#008450" strokeWidth={2} fillOpacity={1} fill="url(#colorFcRevenue)" />
-                    <Area type="monotone" dataKey="expectedProfit" name="الأرباح المتوقعة" stroke="#c59b5f" strokeWidth={2} fillOpacity={1} fill="url(#colorFcProfit)" />
-                    <Line type="step" dataKey="breakevenBaseline" name="خط التعادل" stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm space-y-5">
-              <h4 className="text-sm sm:text-base font-black text-[#153e4d] flex items-center gap-2">
-                <PieIcon className="w-4 h-4 text-[#1f5b70]" />
-                <span>إقبال الزبائن على منتجاتك بحسب المحافظة</span>
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
-                <div className="h-[210px] w-full" dir="ltr">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={GOVERNORATE_SALES_DATA}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={4}
-                        dataKey="value"
-                      >
-                        {GOVERNORATE_SALES_DATA.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(val, name, item) => [`${val}%`, item.payload.name]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-2 text-xs">
-                  {GOVERNORATE_SALES_DATA.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-md" style={{ backgroundColor: item.fill }} />
-                        <span className="font-bold text-slate-800">{item.name}</span>
-                      </div>
-                      <span className="font-mono text-slate-500 font-bold">{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* TAB 2: NATIONAL PRODUCTS */}
+      {/* التبويب 2: عرض المنتجات - مخصصة حسب صاحب الحساب */}
       {activeTab === 'products' && (
         <div className="space-y-6 animate-in fade-in">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-black text-[#153e4d]">المنتجات الوطنية المسجلة في منصة مُنتجي</h3>
-              <p className="text-xs text-slate-500">المنتجات المعروضة للزبائن في السوق الوطني</p>
+              <h3 className="text-lg font-black text-[#153e4d]">
+                {isMasterAdmin
+                  ? 'جميع المنتجات الوطنية المسجلة في منصة مُنتجي'
+                  : 'منتجات ومجسمات متجري الخاص المعروضة للبيع'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {isMasterAdmin
+                  ? 'كامل منتجات السوق العام كمسؤول للنظام'
+                  : 'المنتجات التي قمت برفعها وتصويرها وتظهر للزبائن في السوق'}
+              </p>
             </div>
             <button
               type="button"
@@ -802,48 +725,69 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               className="px-4 py-2 bg-[#1f5b70] text-white rounded-xl text-xs font-bold hover:bg-[#153e4d] flex items-center gap-2 cursor-pointer shadow-2xs"
             >
               <PlusCircle className="w-4 h-4 text-[#dfba83]" />
-              <span>إضافة منتج جديد للمنصة</span>
+              <span>إضافة منتج جديد</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {myStoreProducts.map((prod) => (
-              <div key={prod.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs flex flex-col justify-between hover:border-[#1f5b70]/40 transition-all">
-                <div>
-                  <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-                    <img src={prod.image} alt={prod.title} className="w-full h-full object-cover" />
-                    <span className="absolute top-3 right-3 bg-white/95 backdrop-blur-md text-[#153e4d] text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
-                      {prod.category}
-                    </span>
-                    <span className="absolute bottom-3 left-3 bg-[#153e4d] text-[#dfba83] text-xs font-black px-2.5 py-1 rounded-xl shadow-xs font-mono">
-                      {prod.price.toFixed(3)} ر.ع.
-                    </span>
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{prod.title}</h4>
-                    <p className="text-xs text-slate-500 line-clamp-2">{prod.description}</p>
-                    <div className="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-100">
-                      <span>الجهة المعتمدة: منصة مُنتجي</span>
-                      <span className="font-bold text-[#008450]">المخزون: {prod.stock || 20}</span>
+          {myStoreProducts.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                <Package className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-black text-slate-800 text-sm">لا توجد منتجات مسجلة في متجرك حتى الآن</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  قم بالتقاط صورة لمنتجك أو مجسمك في البوث أو اضغط "إضافة منتج جديد" لعرضه فوراً في السوق الوطني.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('add-product')}
+                className="px-5 py-2.5 bg-[#c59b5f] text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer"
+              >
+                + صوّر واعرض منتجك الآن
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {myStoreProducts.map((prod) => (
+                <div key={prod.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs flex flex-col justify-between hover:border-[#1f5b70]/40 transition-all">
+                  <div>
+                    <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                      <img src={prod.image} alt={prod.title} className="w-full h-full object-cover" />
+                      <span className="absolute top-3 right-3 bg-white/95 backdrop-blur-md text-[#153e4d] text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                        {prod.category}
+                      </span>
+                      <span className="absolute bottom-3 left-3 bg-[#153e4d] text-[#dfba83] text-xs font-black px-2.5 py-1 rounded-xl shadow-xs font-mono">
+                        {prod.price.toFixed(3)} ر.ع.
+                      </span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{prod.title}</h4>
+                      <p className="text-xs text-slate-500 line-clamp-2">{prod.description}</p>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-100">
+                        <span>الجهة: {prod.seller?.name || 'متجر معتمد'}</span>
+                        <span className="font-bold text-[#008450]">المخزون: {prod.stock || 20}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="p-4 pt-0">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('marketplace.html')}
+                      className="w-full py-2 bg-slate-100 hover:bg-[#1f5b70] hover:text-white text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer text-center"
+                    >
+                      معاينة في السوق الوطني 🛍️
+                    </button>
+                  </div>
                 </div>
-                <div className="p-4 pt-0">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('marketplace.html')}
-                    className="w-full py-2 bg-slate-100 hover:bg-[#1f5b70] hover:text-white text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer text-center"
-                  >
-                    معاينة في السوق الوطني
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* TAB 3: CUSTOMER ORDERS */}
+      {/* التبويب 3: طلبات الزبائن */}
       {activeTab === 'orders' && (
         <div className="space-y-6 animate-in fade-in">
           <div>
@@ -906,7 +850,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         </div>
       )}
 
-      {/* TAB 4: FEASIBILITY CALCULATOR */}
+      {/* التبويب 4: حاسبة الجدوى الاقتصادية */}
       {activeTab === 'fease' && (
         <div className="space-y-6 animate-in fade-in">
           <div>
@@ -998,18 +942,18 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         </div>
       )}
 
-      {/* TAB 5: ADD NEW PRODUCT TO PLATFORM */}
+      {/* التبويب 5: إضافة منتج جديد */}
       {activeTab === 'add-product' && (
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm max-w-2xl mx-auto space-y-6 animate-in fade-in">
           <div>
-            <h3 className="text-lg font-black text-[#153e4d]">إضافة منتج جديد لمنصة مُنتجي الوطنية</h3>
-            <p className="text-xs text-slate-500">سيتم إدراج المنتج فوراً في السوق الوطني العماني للزبائن</p>
+            <h3 className="text-lg font-black text-[#153e4d]">إضافة منتج جديد لمتجرك في منصة مُنتجي</h3>
+            <p className="text-xs text-slate-500">سيتم إدراج المنتج فوراً في السوق الوطني العماني باسم متجرك</p>
           </div>
 
           {isSuccessAdd && (
             <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-bold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>تمت إضافة المنتج بنجاح إلى منصة مُنتجي الوطنية!</span>
+              <span>تمت إضافة المنتج بنجاح إلى متجرك في المنصة!</span>
             </div>
           )}
 
@@ -1080,7 +1024,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               </div>
             </div>
 
-            {/* Real Image File Upload & Storage */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -1101,7 +1044,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                 )}
               </div>
 
-              {/* Hidden file input */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1110,7 +1052,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                 className="hidden"
               />
 
-              {/* Upload Trigger & Preview Card */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -1134,7 +1075,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                   )}
                 </div>
 
-                {/* Preview Thumbnail */}
                 <div className="sm:col-span-4 h-24 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden relative flex items-center justify-center shadow-2xs">
                   {newImage ? (
                     <img src={newImage} alt="معاينة المنتج" className="w-full h-full object-cover" />
@@ -1150,46 +1090,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
                     </span>
                   )}
                 </div>
-              </div>
-
-              {/* Optional Authentic Omani Presets */}
-              <div className="pt-1">
-                <span className="text-[10px] font-bold text-slate-500 block mb-1.5">
-                  أو اختر نموذجاً جاهزاً من المنتجات العمانية المعتمدة:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { label: 'لبان حوجري ملكي', url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80' },
-                    { label: 'عسل سدر جبلي', url: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80' },
-                    { label: 'حلوى عمانية بالزعفران', url: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=800&q=80' },
-                    { label: 'خنجر وفضيات نزوى', url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80' },
-                    { label: 'فخار بهلاوي يدوي', url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80' },
-                  ].map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setNewImage(preset.url);
-                        setImageFileName(preset.label);
-                      }}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-[#153e4d] hover:text-[#dfba83] text-slate-700 text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
-                    >
-                      + {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Manual URL input toggle */}
-              <div className="pt-1">
-                <input
-                  type="url"
-                  value={newImage}
-                  onChange={(e) => setNewImage(e.target.value)}
-                  placeholder="أو الصق رابط صورة خارجي مباشر..."
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] font-mono focus:border-[#1f5b70] text-slate-600 bg-slate-50/50"
-                  dir="ltr"
-                />
               </div>
             </div>
 
