@@ -114,6 +114,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [couponCode, setCouponCode] = useState<string>('');
   const [couponDiscountPercent, setCouponDiscountPercent] = useState<number>(0);
 
+  // Sync cart to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('montaji_cart', JSON.stringify(items));
@@ -122,7 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items]);
 
-  // إجبار المتجر على مطابقة الصور والوصف مع PRODUCTS_DATA مباشرة
+  // قراءة المنتجات والصور التي وضعتها أنت في Firebase مباشرة بدون أي تعديل أو استبدال
   useEffect(() => {
     const productsColRef = collection(db, 'products');
 
@@ -132,30 +133,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!snapshot.empty) {
           const loadedProducts = snapshot.docs.map((docSnap) => {
             const data = docSnap.data();
-            const matchedDefault = PRODUCTS_DATA.find(
-              (p) => p.id === docSnap.id || p.title.trim() === (data.title || '').trim()
-            );
 
             return {
               id: docSnap.id,
-              title: matchedDefault ? matchedDefault.title : (data.title || ''),
-              description: matchedDefault ? matchedDefault.description : (data.description || ''),
-              price: matchedDefault ? matchedDefault.price : (Number(data.price) || 0),
-              category: matchedDefault ? matchedDefault.category : (data.category || 'عام'),
-              subCategory: matchedDefault ? matchedDefault.subCategory : data.subCategory,
-              governorate: matchedDefault ? matchedDefault.governorate : (data.governorate || 'محافظة مسقط'),
+              title: data.title || '',
+              description: data.description || '',
+              price: Number(data.price) || 0,
+              category: data.category || 'عام',
+              subCategory: data.subCategory || undefined,
+              governorate: data.governorate || 'محافظة مسقط',
               seller: {
-                name: matchedDefault ? matchedDefault.seller.name : (data.sellerName || 'رائد أعمال عماني'),
-                isRiyadaCertified: matchedDefault ? matchedDefault.seller.isRiyadaCertified : Boolean(data.isRiyadaCertified),
-                rating: matchedDefault ? matchedDefault.seller.rating : (Number(data.rating) || 4.9),
-                email: 'hudifamoosa2007@gmail.com',
+                name: data.sellerName || data.seller?.name || 'رائد أعمال عماني',
+                isRiyadaCertified: data.isRiyadaCertified !== undefined ? Boolean(data.isRiyadaCertified) : true,
+                rating: Number(data.rating) || 4.9,
+                email: data.sellerEmail || 'hudifamoosa2007@gmail.com',
               },
-              sellerId: matchedDefault ? 'hudifamoosa2007' : (data.sellerId || 'guest-seller'),
-              sellerEmail: matchedDefault ? 'hudifamoosa2007@gmail.com' : (data.sellerEmail || ''),
-              // أخذ الصورة الصحيحة من الكود دائماً للمنتجات الـ 12 الأساسية
-              image: matchedDefault ? matchedDefault.image : (data.image || ''),
-              stock: Number(data.stock) || 15,
-              featured: matchedDefault ? Boolean(matchedDefault.featured) : Boolean(data.featured),
+              sellerId: data.sellerId || 'hudifamoosa2007',
+              sellerEmail: data.sellerEmail || 'hudifamoosa2007@gmail.com',
+              // الاعتماد الكلي على الرابط الموجود في قاعدة البيانات (صورتك التي عدلتها)
+              image: data.image || '',
+              stock: data.stock !== undefined ? Number(data.stock) : 15,
+              featured: Boolean(data.featured),
             } as Product;
           });
           setProducts(loadedProducts);
@@ -164,14 +162,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       },
       (error) => {
-        console.warn('Fallback to PRODUCTS_DATA:', error);
-        setProducts(PRODUCTS_DATA);
+        handleFirestoreError(error, OperationType.GET, 'products');
       }
     );
 
     return () => unsubscribe();
   }, []);
 
+  // الاستماع للطلبات
   useEffect(() => {
     if (!user) return;
 
