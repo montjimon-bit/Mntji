@@ -76,7 +76,7 @@ interface CartContextType {
   applyCoupon: (code: string) => { success: boolean; message: string };
   removeCoupon: () => void;
   orders: Order[];
-  allOrders: Order[]; // For Admin
+  allOrders: Order[];
   lastOrder: Order | null;
   placeOrder: (customerInfo: CreateOrderInput) => Promise<Order>;
   updateOrderStatus: (orderId: string, newStatus: Order['status']) => Promise<void>;
@@ -114,7 +114,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [couponCode, setCouponCode] = useState<string>('');
   const [couponDiscountPercent, setCouponDiscountPercent] = useState<number>(0);
 
-  // Sync cart to localStorage
+  // حفظ السلة محلياً
   useEffect(() => {
     try {
       localStorage.setItem('montaji_cart', JSON.stringify(items));
@@ -123,7 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items]);
 
-  // Sync products from Firestore or seed if empty + auto-correcting images
+  // قراءة المنتجات مباشرة من Firebase مع احترام التعديلات اليدوية
   useEffect(() => {
     const productsColRef = collection(db, 'products');
 
@@ -133,32 +133,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!snapshot.empty) {
           const loadedProducts = snapshot.docs.map((docSnap) => {
             const data = docSnap.data();
-            // البحث عن المنتج في mockData لتصحيح الصورة المتلخبطة تلقائياً
-            const matchedDefault = PRODUCTS_DATA.find((p) => p.id === docSnap.id || p.title === data.title);
+            const matchedDefault = PRODUCTS_DATA.find((p) => p.id === docSnap.id);
 
             return {
               id: docSnap.id,
-              title: data.title || '',
-              description: data.description || '',
-              price: Number(data.price) || 0,
-              category: data.category || 'عام',
-              governorate: data.governorate || 'محافظة مسقط',
+              title: data.title || (matchedDefault ? matchedDefault.title : ''),
+              description: data.description || (matchedDefault ? matchedDefault.description : ''),
+              price: Number(data.price) || (matchedDefault ? matchedDefault.price : 0),
+              category: data.category || (matchedDefault ? matchedDefault.category : 'عام'),
+              subCategory: data.subCategory || (matchedDefault ? matchedDefault.subCategory : undefined),
+              governorate: data.governorate || (matchedDefault ? matchedDefault.governorate : 'محافظة مسقط'),
               seller: {
-                name: data.sellerName || 'رائد أعمال عماني',
-                isRiyadaCertified: Boolean(data.isRiyadaCertified),
-                rating: Number(data.rating) || 4.8,
+                name: data.sellerName || data.seller?.name || (matchedDefault ? matchedDefault.seller.name : 'رائد أعمال عماني'),
+                isRiyadaCertified: data.isRiyadaCertified !== undefined ? Boolean(data.isRiyadaCertified) : true,
+                rating: Number(data.rating) || 4.9,
+                email: data.sellerEmail || 'hudifamoosa2007@gmail.com',
               },
+              // إذا كان المنتج من الـ 12 الافتراضية يربطه بحسابك، وإذا كان لعميل يحفظ إيميل العميل
               sellerId: data.sellerId || (matchedDefault ? 'hudifamoosa2007' : 'guest-seller'),
               sellerEmail: data.sellerEmail || (matchedDefault ? 'hudifamoosa2007@gmail.com' : ''),
-              // استخدام الصورة المصححة المتناسقة مع الوصف
-              image: matchedDefault ? matchedDefault.image : (data.image || ''),
-              stock: Number(data.stock) || 10,
+              // الأولوية القصوى للصورة التي عدلتها أنت في Firebase (data.image)
+              image: data.image || (matchedDefault ? matchedDefault.image : ''),
+              stock: data.stock !== undefined ? Number(data.stock) : 15,
               featured: Boolean(data.featured),
             } as Product;
           });
           setProducts(loadedProducts);
         } else {
-          // رفع المنتجات الأولية لحسابك كمسؤول للمنصة
+          // في حال كانت القاعدة فارغة تماماً فقط، يرفع البيانات الأولية
           PRODUCTS_DATA.forEach(async (prod) => {
             try {
               await setDoc(doc(db, 'products', prod.id), {
@@ -167,6 +169,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 description: prod.description,
                 price: prod.price,
                 category: prod.category,
+                subCategory: prod.subCategory || '',
                 governorate: prod.governorate,
                 sellerName: prod.seller.name,
                 sellerId: 'hudifamoosa2007',
@@ -192,7 +195,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  // Listen to Orders from Firestore
+  // الاستماع للطلبات
   useEffect(() => {
     if (!user) return;
 
@@ -382,8 +385,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         category: productData.category,
         governorate: productData.governorate,
         sellerName: productData.seller.name,
-        sellerId: user?.uid || 'guest-seller',
-        sellerEmail: user?.email || '',
+        sellerId: productData.sellerId || user?.uid || 'guest-seller',
+        sellerEmail: productData.sellerEmail || user?.email || '',
         isRiyadaCertified: productData.seller.isRiyadaCertified,
         rating: 5.0,
         image: productData.image,
