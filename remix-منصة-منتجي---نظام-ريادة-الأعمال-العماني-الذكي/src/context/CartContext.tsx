@@ -3,7 +3,6 @@ import {
   collection,
   doc,
   setDoc,
-  getDocs,
   onSnapshot,
   query,
   where,
@@ -124,7 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items]);
 
-  // Sync products from Firestore or seed if empty
+  // Sync products from Firestore or seed if empty + auto-correcting images
   useEffect(() => {
     const productsColRef = collection(db, 'products');
 
@@ -134,6 +133,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!snapshot.empty) {
           const loadedProducts = snapshot.docs.map((docSnap) => {
             const data = docSnap.data();
+            // البحث عن المنتج في mockData لتصحيح الصورة المتلخبطة تلقائياً
+            const matchedDefault = PRODUCTS_DATA.find((p) => p.id === docSnap.id || p.title === data.title);
+
             return {
               id: docSnap.id,
               title: data.title || '',
@@ -146,16 +148,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 isRiyadaCertified: Boolean(data.isRiyadaCertified),
                 rating: Number(data.rating) || 4.8,
               },
-              sellerId: data.sellerId || '',
-              sellerEmail: data.sellerEmail || '',
-              image: data.image || '',
+              sellerId: data.sellerId || (matchedDefault ? 'hudifamoosa2007' : 'guest-seller'),
+              sellerEmail: data.sellerEmail || (matchedDefault ? 'hudifamoosa2007@gmail.com' : ''),
+              // استخدام الصورة المصححة المتناسقة مع الوصف
+              image: matchedDefault ? matchedDefault.image : (data.image || ''),
               stock: Number(data.stock) || 10,
               featured: Boolean(data.featured),
             } as Product;
           });
           setProducts(loadedProducts);
         } else {
-          // تحميل المنتجات التأسيسية لحسابك كمدير للمنصة
+          // رفع المنتجات الأولية لحسابك كمسؤول للمنصة
           PRODUCTS_DATA.forEach(async (prod) => {
             try {
               await setDoc(doc(db, 'products', prod.id), {
@@ -167,7 +170,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 governorate: prod.governorate,
                 sellerName: prod.seller.name,
                 sellerId: 'hudifamoosa2007',
-                sellerEmail: 'hudifamoosa2007@gmail.com', // حسابك الرئيسي
+                sellerEmail: 'hudifamoosa2007@gmail.com',
                 isRiyadaCertified: prod.seller.isRiyadaCertified,
                 rating: prod.seller.rating,
                 image: prod.image,
@@ -367,7 +370,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // دالة إضافة المنتج مع تسجيل بريد البائع ومعرفه
   const addNewProduct = async (productData: Omit<Product, 'id'>) => {
     const newId = `prod-${Date.now()}`;
     const productRef = doc(db, 'products', newId);
@@ -381,7 +383,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         governorate: productData.governorate,
         sellerName: productData.seller.name,
         sellerId: user?.uid || 'guest-seller',
-        sellerEmail: user?.email || '', // حفظ بريد المستخدم الحالي بدقة
+        sellerEmail: user?.email || '',
         isRiyadaCertified: productData.seller.isRiyadaCertified,
         rating: 5.0,
         image: productData.image,
