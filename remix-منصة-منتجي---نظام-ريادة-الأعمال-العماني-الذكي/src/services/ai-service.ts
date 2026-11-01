@@ -1,9 +1,10 @@
 /**
  * ai-service.ts - Real AI Integration Service for Montaji Platform
- * Connects to the server-side Gemini 3.8 Flash proxy endpoints with full fallback handling
+ * Connects to the server-side Gemini Flash proxy endpoints with full fallback handling
  */
 
 import { AwniEngine } from './awni-engine';
+import { GoogleGenAI } from "@google/genai";
 
 export interface ChatMessage {
   id: string;
@@ -297,7 +298,7 @@ export class AiService {
   }
 
   /**
-   * Transcribe Audio using Gemini 3.5 Transcribe
+   * Transcribe Audio using Gemini Transcribe
    */
   public static async transcribeAudio({
     audioBase64,
@@ -335,7 +336,7 @@ export class AiService {
   }
 
   /**
-   * Create or Edit Image using Gemini 3.1 Flash Image Preview
+   * Create or Edit Image using Gemini Flash Image Preview
    */
   public static async generateOrEditImage({
     prompt,
@@ -378,7 +379,6 @@ export class AiService {
     }
   }
 }
-import { GoogleGenAI } from "@google/genai";
 
 // دالة تحليل مجسم الهولوجرام
 export async function generateHologramConcept(imageBase64: string, participantName: string) {
@@ -402,7 +402,7 @@ export async function generateHologramConcept(imageBase64: string, participantNa
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: [
         {
           role: "user",
@@ -429,4 +429,3 @@ export async function generateHologramConcept(imageBase64: string, participantNa
     return { success: false, error: "تعذر تحليل المجسم بواسطة الذكاء الاصطناعي" };
   }
 }
-
