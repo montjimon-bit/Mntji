@@ -35,9 +35,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
 
   const canAccessSellerTools = isSeller || isAdmin;
 
-  // القوائم حسب صلاحية الحساب (عميل مقابل بائع)
+  // القوائم مع الواجهة الرئيسية + صلاحيات العميل مقابل البائع
   const navLinks = canAccessSellerTools
     ? [
+        { id: 'home', label: t('الرئيسية', 'Home') },
         {
           id: 'dashboard.html',
           label: isAdmin ? t('لوحة الإدارة', 'Admin Panel') : t('متجري الخاص', 'My Store'),
@@ -49,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
         { id: 'ai-platform.html', label: t('المستشار عوني', 'Awni Advisor') },
       ]
     : [
+        { id: 'home', label: t('الرئيسية', 'Home') },
         { id: 'marketplace.html', label: t('سوق المنتجات', 'Marketplace') },
         { id: 'training-courses.html', label: t('الدورات التدريبية', 'Training Courses') },
       ];
@@ -104,8 +106,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0d232d]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 sm:h-20 gap-2">
-            {/* شعار منصة مُنتجي */}
-            <button onClick={() => onNavigate('marketplace.html')} className="flex items-center gap-2 text-start cursor-pointer shrink-0">
+            {/* شعار منصة مُنتجي يعيدك للواجهة الرئيسية */}
+            <button onClick={() => onNavigate('home')} className="flex items-center gap-2 text-start cursor-pointer shrink-0">
               <div className="p-1 rounded-xl bg-[#f4f8fa] dark:bg-slate-800 border border-[#1f5b70]/20">
                 <MontajiLogo size={38} />
               </div>
@@ -119,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
               </div>
             </button>
 
-            <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-xs xl:max-w-md mx-2">
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-xs xl:max-w-sm mx-2">
               <div className="relative w-full">
                 <input
                   type="text"
@@ -151,7 +153,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, onOpenA
             </nav>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {/* زر تبديل اللغة عربي / English */}
               <button
                 type="button"
                 onClick={toggleLanguage}
