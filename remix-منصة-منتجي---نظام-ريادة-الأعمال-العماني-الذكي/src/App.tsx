@@ -19,6 +19,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobilePlatformHub } from './components/MobilePlatformHub';
 import { PlatformBreadcrumbs } from './components/PlatformBreadcrumbs';
 
+import { HomeView } from './views/HomeView';
 import { MarketplaceView } from './views/MarketplaceView';
 import { WishlistView } from './views/WishlistView';
 import { AiPlatformView } from './views/AiPlatformView';
@@ -38,10 +39,11 @@ function MainAppContent() {
   const { t } = useLanguage();
   const canAccessSellerTools = isSeller || isAdmin;
 
+  // الواجهة الافتراضية للمنصة هي الرئيسية (home)
   const [currentView, setCurrentView] = useState<string>(() => {
     const hash = window.location.hash.replace('#', '').replace(/^\//, '');
     const path = window.location.pathname.replace(/^\//, '');
-    return hash || path || 'marketplace.html';
+    return hash || path || 'home';
   });
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -51,18 +53,18 @@ function MainAppContent() {
 
   const navigateTo = (view: string) => {
     let clean = view.replace(/^#/, '').replace(/^\//, '');
-    if (!clean || clean === '#' || clean === 'home') clean = 'marketplace.html';
+    if (!clean || clean === '#') clean = 'home';
 
     const lower = clean.toLowerCase();
 
-    // حذف الكشك التفاعلي: إعادة توجيه أي رابط قديم للكشك إلى السوق
+    // حذف الكشك التفاعلي: إعادة توجيه أي رابط قديم للكشك إلى الواجهة الرئيسية
     if (
       lower.includes('kiosk') ||
       lower.includes('open-store') ||
       lower.includes('create-store') ||
       lower.includes('scan-model')
     ) {
-      clean = 'marketplace.html';
+      clean = 'home';
     }
 
     // منع العميل من دخول صفحات التاجر أو دراسة الجدوى أو المستشار عوني
@@ -74,18 +76,18 @@ function MainAppContent() {
         lower.includes('dashboard') ||
         lower.includes('admin'))
     ) {
-      clean = 'marketplace.html';
+      clean = 'home';
     }
 
     setCurrentView(clean);
-    window.location.hash = clean;
+    window.location.hash = clean === 'home' ? '' : clean;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, '');
-      navigateTo(hash || 'marketplace.html');
+      navigateTo(hash || 'home');
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -141,6 +143,14 @@ function MainAppContent() {
   const renderCurrentView = () => {
     const normalized = currentView.toLowerCase().trim();
 
+    if (normalized === 'home' || normalized === '') {
+      return <HomeView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
+    }
+
+    if (normalized.includes('marketplace')) {
+      return <MarketplaceView onNavigate={navigateTo} />;
+    }
+
     if (normalized.includes('training') || normalized.includes('courses')) {
       return <TrainingCoursesView />;
     }
@@ -172,7 +182,7 @@ function MainAppContent() {
     if (normalized.includes('terms')) return <LegalView initialTab="terms" onNavigate={navigateTo} />;
     if (normalized.includes('privacy')) return <LegalView initialTab="privacy" onNavigate={navigateTo} />;
 
-    return <MarketplaceView onNavigate={navigateTo} />;
+    return <HomeView onNavigate={navigateTo} onOpenAuth={handleOpenAuth} />;
   };
 
   return (
@@ -283,7 +293,7 @@ function MainAppContent() {
           if (u?.role === 'seller' || u?.role === 'admin' || u?.role === 'entrepreneur') {
             navigateTo('dashboard.html');
           } else {
-            navigateTo('marketplace.html');
+            navigateTo('home');
           }
         }}
         onNavigateToFullPage={navigateTo}
