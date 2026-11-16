@@ -79,78 +79,76 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#122e3a] via-[#153e4d] to-[#0f242e] text-white pt-14 pb-20 px-4 sm:px-6 lg:px-8 border-b border-[#1f5b70]/40">
+      {/* Hero Section (متناسق ومتوسط على كامل الشاشة بدون فراغ جانبي) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#122e3a] via-[#153e4d] to-[#0f242e] text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8 border-b border-[#1f5b70]/40">
         <div className="absolute top-0 start-1/4 w-96 h-96 bg-[#1f5b70]/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 end-1/4 w-96 h-96 bg-[#c59b5f]/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="max-w-3xl space-y-6 text-start">
-            <div className="inline-flex items-center gap-2 bg-[#c59b5f]/15 border border-[#c59b5f]/40 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#dfba83]">
-              <ShieldCheck className="w-4 h-4 text-[#c59b5f]" />
-              <span>
-                {t(
-                  'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040',
-                  'National Umbrella for Omani Innovation - Oman Vision 2040'
-                )}
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.22] sm:leading-[1.18]">
-              {t('انطلق بمشروعك في ', 'Launch Your Venture in ')}{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#dfba83] via-[#e9cca0] to-white">
-                {t('سلطنة عُمان', 'Sultanate of Oman')}
-              </span>{' '}
-              {t('بذكاء متكامل', 'with Integrated Intelligence')}
-            </h1>
-
-            <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl font-normal">
+        <div className="max-w-5xl mx-auto relative z-10 text-center space-y-7">
+          <div className="inline-flex items-center justify-center gap-2 bg-[#c59b5f]/15 border border-[#c59b5f]/40 px-4 py-1.5 rounded-full text-xs font-semibold text-[#dfba83]">
+            <ShieldCheck className="w-4 h-4 text-[#c59b5f]" />
+            <span>
               {t(
-                'منصة "مُنتجي" المنظومة الوطنية المعتمدة لرواد الأعمال والمشاريع العُمانية: سوق رقمي وطني للمنتجات العُمانية الأصيلة، وبرامج ودورات تدريبية متخصصة.',
-                'Montaji Platform is the certified national ecosystem for Omani entrepreneurs: a national digital marketplace for authentic Omani products and specialized training courses.'
+                'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040',
+                'National Umbrella for Omani Innovation - Oman Vision 2040'
               )}
-            </p>
+            </span>
+          </div>
 
-            {/* الأزرار الرئيسية: سوق المنتجات + الدورات التدريبية */}
-            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
-              <button
-                onClick={() => onNavigate('marketplace.html')}
-                className="w-full sm:w-auto justify-center px-6 py-3.5 bg-gradient-to-r from-[#c59b5f] to-[#dfba83] hover:from-[#b58b4f] hover:to-[#cfab73] text-slate-950 font-black rounded-xl shadow-lg shadow-[#c59b5f]/25 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer text-sm"
-              >
-                <ShoppingBag className="w-4 h-4 text-slate-950" />
-                <span>{t('سوق المنتجات', 'Products Marketplace')}</span>
-              </button>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.22] sm:leading-[1.18] max-w-4xl mx-auto">
+            {t('انطلق بمشروعك في ', 'Launch Your Venture in ')}{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#dfba83] via-[#e9cca0] to-white">
+              {t('سلطنة عُمان', 'Sultanate of Oman')}
+            </span>{' '}
+            {t('بذكاء متكامل', 'with Integrated Intelligence')}
+          </h1>
 
-              <button
-                onClick={() => onNavigate('training-courses.html')}
-                className="w-full sm:w-auto justify-center px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer text-sm"
-              >
-                <BookOpen className="w-4 h-4 text-[#dfba83]" />
-                <span>{t('الدورات التدريبية', 'Training Courses')}</span>
-              </button>
+          <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-3xl mx-auto font-normal">
+            {t(
+              'منصة "مُنتجي" المنظومة الوطنية المعتمدة لرواد الأعمال والمشاريع العُمانية: سوق رقمي وطني للمنتجات العُمانية الأصيلة، وبرامج ودورات تدريبية متخصصة.',
+              'Montaji Platform is the certified national ecosystem for Omani entrepreneurs: a national digital marketplace for authentic Omani products and specialized training courses.'
+            )}
+          </p>
+
+          {/* الأزرار الرئيسية متوسطة ومتوازنة */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <button
+              onClick={() => onNavigate('marketplace.html')}
+              className="w-full sm:w-auto justify-center px-8 py-4 bg-gradient-to-r from-[#c59b5f] to-[#dfba83] hover:from-[#b58b4f] hover:to-[#cfab73] text-slate-950 font-black rounded-xl shadow-lg shadow-[#c59b5f]/25 hover:scale-[1.02] transition-all flex items-center gap-2.5 cursor-pointer text-sm sm:text-base"
+            >
+              <ShoppingBag className="w-5 h-5 text-slate-950" />
+              <span>{t('سوق المنتجات', 'Products Marketplace')}</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('training-courses.html')}
+              className="w-full sm:w-auto justify-center px-8 py-4 bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-sm sm:text-base"
+            >
+              <BookOpen className="w-5 h-5 text-[#dfba83]" />
+              <span>{t('الدورات التدريبية', 'Training Courses')}</span>
+            </button>
+          </div>
+
+          {/* Trust Indicators متناسقة في الوسط */}
+          <div className="pt-8 max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-700/60 text-xs sm:text-sm text-slate-300">
+            <div className="flex items-center justify-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#c59b5f] shrink-0" />
+              <span>{t('معتمد لحاملي بطاقة ريادة', 'Certified for Riyada Card Holders')}</span>
             </div>
-
-            {/* Trust Indicators */}
-            <div className="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-slate-700/60 text-xs text-slate-300">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                <span>{t('معتمد لحاملي بطاقة ريادة', 'Certified for Riyada Card Holders')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                <span>{t('تكامل مع منصة عُمان للأعمال', 'Integrated with Oman Business Platform')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                <span>{t('توصيل لجميع محافظات السلطنة', 'Delivery Across All Governorates')}</span>
-              </div>
+            <div className="flex items-center justify-center gap-2">
+              <Building2 className="w-4 h-4 text-[#c59b5f] shrink-0" />
+              <span>{t('تكامل مع منصة عُمان للأعمال', 'Integrated with Oman Business Platform')}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-[#c59b5f] shrink-0" />
+              <span>{t('توصيل لجميع محافظات السلطنة', 'Delivery Across All Governorates')}</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Official Contact & Direct Communication Strip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
         <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 transition-colors">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-2xl bg-[#153e4d] text-white">
@@ -240,22 +238,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       {/* خريطة أقسام المنصة المنظمة (سوق المنتجات + الدورات التدريبية) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-md space-y-6 transition-colors">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c59b5f] bg-[#c59b5f]/10 px-3 py-1 rounded-full mb-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#c59b5f]" />
-                <span>{t('دليل الوصول السريع والمنظم', 'Organized Platform Directory')}</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                {t('خريطة أقسام المنصة المنظمة', 'Organized Platform Sections Map')}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-                {t(
-                  'تنظيم متكامل يضمن وصولك الفوري إلى سوق المنتجات العمانية والدورات التدريبية بكل سهولة ووضوح.',
-                  'Structured navigation giving you instant access to the Omani Marketplace and Training Courses.'
-                )}
-              </p>
+          <div className="text-center max-w-2xl mx-auto border-b border-slate-100 dark:border-slate-800 pb-5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c59b5f] bg-[#c59b5f]/10 px-3 py-1 rounded-full mb-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#c59b5f]" />
+              <span>{t('دليل الوصول السريع والمنظم', 'Organized Platform Directory')}</span>
             </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+              {t('خريطة أقسام المنصة المنظمة', 'Organized Platform Sections Map')}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {t(
+                'تنظيم متكامل يضمن وصولك الفوري إلى سوق المنتجات العمانية والدورات التدريبية بكل سهولة ووضوح.',
+                'Structured navigation giving you instant access to the Omani Marketplace and Training Courses.'
+              )}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
