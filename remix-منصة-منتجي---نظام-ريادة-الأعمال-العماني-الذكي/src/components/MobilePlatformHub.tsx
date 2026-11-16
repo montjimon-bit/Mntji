@@ -1,38 +1,23 @@
-/**
- * MobilePlatformHub.tsx
- * Comprehensive mobile & tablet directory drawer (دليل المنصة الشامل).
- * Ensures that no section or feature is lost on phones or tablets.
- */
-
 import React from 'react';
 import {
   X,
+  Home,
   ShoppingBag,
-  Sparkles,
-  TrendingUp,
-  FolderOpen,
   BookOpen,
   Award,
-  ShoppingCart,
   Heart,
-  PackageCheck,
-  UserCheck,
-  Phone,
-  Instagram,
-  MessageCircle,
-  FileText,
-  ShieldCheck,
-  ChevronLeft,
-  ExternalLink,
-  LogOut,
-  Building,
-  BarChart3,
+  Package,
+  ShoppingCart,
   Store,
-  Crown,
+  Sparkles,
+  TrendingUp,
+  Globe,
+  LogIn,
+  LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
 import { MontajiLogo } from './MontajiLogo';
 
 interface MobilePlatformHubProps {
@@ -43,23 +28,6 @@ interface MobilePlatformHubProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
 }
 
-interface HubItem {
-  id: string;
-  label: string;
-  desc: string;
-  icon: React.ComponentType<{ className?: string }>;
-  badge?: string;
-  highlight?: boolean;
-}
-
-interface HubSection {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-  items: HubItem[];
-}
-
 export const MobilePlatformHub: React.FC<MobilePlatformHubProps> = ({
   isOpen,
   onClose,
@@ -67,299 +35,190 @@ export const MobilePlatformHub: React.FC<MobilePlatformHubProps> = ({
   onNavigate,
   onOpenAuth,
 }) => {
-  const { user, userProfile, isAdmin, isSeller, isCustomer, hasStore, signInWithGoogle, logout } = useAuth();
-  const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist();
+  const { user, isSeller, isAdmin, logout } = useAuth();
+  const { lang, toggleLanguage, t } = useLanguage();
 
   if (!isOpen) return null;
 
-  const handleLinkClick = (view: string) => {
-    onNavigate(view);
+  const canAccessSellerTools = isSeller || isAdmin;
+
+  const handleGo = (view: string) => {
     onClose();
+    onNavigate(view);
   };
 
-  const sections: HubSection[] = [
+  // روابط العميل والزائر
+  const publicSections = [
+    { id: 'home', label: t('الواجهة الرئيسية', 'Home'), icon: Home },
+    { id: 'marketplace.html', label: t('سوق المنتجات العُمانية', 'Omani Marketplace'), icon: ShoppingBag },
+    { id: 'training-courses.html', label: t('الدورات التدريبية', 'Training Courses'), icon: BookOpen },
+    { id: 'success-stories.html', label: t('قصص نجاح رواد الأعمال', 'Success Stories'), icon: Award },
+    { id: 'cart.html', label: t('سلة التسوق', 'Shopping Cart'), icon: ShoppingCart },
+    { id: 'wishlist.html', label: t('قائمة المفضلة', 'My Wishlist'), icon: Heart },
+    { id: 'orders.html', label: t('متابعة طلباتي', 'My Orders'), icon: Package },
+  ];
+
+  // روابط البائع / التاجر فقط
+  const sellerSections = [
     {
-      title: 'سوق المنتجات والتسوق الوطني',
-      icon: ShoppingBag,
-      color: 'text-rose-600',
-      bgColor: 'bg-rose-50',
-      items: [
-        {
-          id: 'marketplace.html',
-          label: 'سوق المنتجات العمانية',
-          desc: 'لبان، عسل جبلي، حلوى، خناجر وفضيات',
-          icon: ShoppingBag,
-          badge: 'توصيل عماني 🇴🇲',
-        },
-        {
-          id: 'cart.html',
-          label: 'سلة المشتريات',
-          desc: 'مراجعة المنتجات وإنهاء الطلب',
-          icon: ShoppingCart,
-          badge: cartCount > 0 ? `${cartCount} منتجات` : undefined,
-        },
-        {
-          id: 'wishlist.html',
-          label: 'قائمة المفضلة',
-          desc: 'منتجاتك المحفوظة للرجوع إليها',
-          icon: Heart,
-          badge: wishlistCount > 0 ? `${wishlistCount}` : undefined,
-        },
-        {
-          id: 'orders.html',
-          label: 'متابعة طلباتي ومشترياتي',
-          desc: 'سجل الشحنات وتتبع حالة التوصيل',
-          icon: PackageCheck,
-        },
-      ],
+      id: 'dashboard.html',
+      label: isAdmin ? t('لوحة تحكم الإدارة', 'Admin Dashboard') : t('متجري الخاص', 'My Private Store'),
+      icon: Store,
     },
-    {
-      title: 'ريادة الأعمال والمشاريع الاستثمارية',
-      icon: TrendingUp,
-      color: 'text-amber-700',
-      bgColor: 'bg-amber-50',
-      items: [
-        {
-          id: 'ai-platform.html',
-          label: 'المستشار الذكي "عوني"',
-          desc: 'استشارات ريادية، تمويل ميسر وتراخيص',
-          icon: Sparkles,
-          highlight: true,
-        },
-        {
-          id: 'ai-business-idea.html',
-          label: 'دراسات الجدوى الاقتصادية',
-          desc: 'حساب رأس المال ونقطة التعادل وهوامش الربح',
-          icon: TrendingUp,
-        },
-        ...(hasStore
-          ? [
-              {
-                id: 'dashboard.html',
-                label: 'متجري الخاص ولوحة التحكم',
-                desc: 'إدارة المنتجات، الطلبات ومؤشرات الأرباح (Recharts)',
-                icon: Store,
-                badge: 'متجري 🏪',
-              },
-            ]
-          : [
-              {
-                id: 'register.html',
-                label: 'فتح متجر خاص (ترقية لبائع)',
-                desc: 'ابدأ بيع منتجاتك العمانية واحصل على متجرك الخاص مجاناً',
-                icon: Store,
-                badge: 'مجاناً ✨',
-              },
-            ]),
-      ],
-    },
-    {
-      title: 'التدريب والتمكين وقصص النجاح',
-      icon: BookOpen,
-      color: 'text-teal-700',
-      bgColor: 'bg-teal-50',
-      items: [
-        {
-          id: 'training-courses.html',
-          label: 'الدورات والورش التدريبية',
-          desc: 'تأهيل رواد الأعمال والحرفيين والأسر',
-          icon: BookOpen,
-        },
-        {
-          id: 'success-stories.html',
-          label: 'قصص النجاح العمانية الملهمة',
-          desc: 'نماذج وتجارب رواد الأعمال في السلطنة',
-          icon: Award,
-        },
-      ],
-    },
+    { id: 'ai-platform.html', label: t('المستشار الاقتصادي عوني', 'Advisor Awni'), icon: Sparkles },
+    { id: 'ai-business-idea.html', label: t('إعداد دراسة جدوى', 'Feasibility Study'), icon: TrendingUp },
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex justify-end animate-in fade-in duration-200"
-      dir="rtl"
-    >
-      <div className="bg-white w-full max-w-md h-full flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300">
-        {/* Drawer Header */}
-        <div className="bg-gradient-to-r from-[#122e3a] via-[#153e4d] to-[#1f5b70] text-white p-4 flex items-center justify-between shrink-0 border-b border-[#c59b5f]/30">
+    <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+      {/* خلفية للإغلاق */}
+      <div className="flex-1" onClick={onClose} />
+
+      {/* جسم القائمة المنبثقة */}
+      <div className="bg-white dark:bg-[#0d232d] rounded-t-3xl border-t border-slate-200 dark:border-slate-800 max-h-[85vh] overflow-y-auto p-5 space-y-5 shadow-2xl">
+        {/* رأس القائمة */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <MontajiLogo className="w-8 h-8 text-[#e9cca0]" />
+            <MontajiLogo size={34} />
             <div>
-              <h3 className="font-black text-sm text-white">دليل منصة مُنتجي الشامل</h3>
-              <p className="text-[11px] text-[#dfba83]">كل أقسام وخدمات المنصة في متناول يدك</p>
+              <h3 className="font-black text-base text-[#153e4d] dark:text-white">
+                {t('منصة مُنتَجي', 'Montaji Platform')}
+              </h3>
+              <span className="text-[11px] text-[#c59b5f] font-bold">
+                {t('القائمة الشاملة للجوال', 'Mobile Navigation')}
+              </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
-            aria-label="إغلاق الدليل"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* زر تبديل اللغة */}
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#153e4d]/10 dark:bg-slate-800 text-[#153e4d] dark:text-[#dfba83] text-xs font-bold cursor-pointer"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#c59b5f]" />
+              <span>{lang === 'ar' ? 'English' : 'عربي'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* User Account Bar */}
-        <div className="bg-slate-50 p-3.5 border-b border-slate-200 shrink-0">
-          {user ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName || 'User'}
-                    className="w-9 h-9 rounded-xl object-cover border border-slate-200"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-xl bg-[#153e4d] text-[#e9cca0] flex items-center justify-center text-xs font-bold">
-                    {user.displayName ? user.displayName.slice(0, 1) : 'م'}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <div className="text-xs font-black text-slate-900 line-clamp-1">
-                    {user.displayName || 'عضو المنصة'}
-                  </div>
-                  <div className="text-[10px] font-bold">
-                    {isAdmin ? (
-                      <span className="text-amber-700">المشرف العام 👑</span>
-                    ) : isSeller ? (
-                      <span className="text-[#c59b5f]">بائع 🏪 (متجري الخاص)</span>
-                    ) : (
-                      <span className="text-[#1f5b70]">عميل 🛒 (تصفح وشراء)</span>
-                    )}
-                  </div>
-                </div>
+        {/* بطاقة الحساب */}
+        {user ? (
+          <div className="bg-[#153e4d] text-white rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-black truncate">{user.displayName || t('عضو المنصة', 'Member')}</div>
+              <div className="text-xs text-[#dfba83] flex items-center gap-1 mt-0.5">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>
+                  {isAdmin
+                    ? t('مشرف المنصة', 'Platform Admin')
+                    : isSeller
+                    ? t('حساب بائع / تاجر', 'Seller Account')
+                    : t('حساب عميل', 'Customer Account')}
+                </span>
               </div>
-
-              <button
-                onClick={() => {
-                  logout();
-                  onClose();
-                }}
-                className="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>خروج</span>
-              </button>
             </div>
-          ) : (
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-slate-600 font-medium">سجّل دخولك (عميل أو بائع)</span>
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenAuth('login');
-                }}
-                className="px-3.5 py-1.5 bg-[#153e4d] hover:bg-[#122e3a] text-[#dfba83] font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1 cursor-pointer shrink-0"
-              >
-                <span>تسجيل الدخول / حساب جديد</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                logout();
+              }}
+              className="px-3 py-2 rounded-xl bg-rose-600/90 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{t('خروج', 'Logout')}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenAuth('login');
+              }}
+              className="py-3 px-4 rounded-xl bg-[#153e4d] text-[#e9cca0] text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-[#c59b5f]" />
+              <span>{t('تسجيل الدخول', 'Sign In')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenAuth('register');
+              }}
+              className="py-3 px-4 rounded-xl bg-[#c59b5f] text-slate-950 text-xs font-black flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>{t('إنشاء حساب', 'Register')}</span>
+            </button>
+          </div>
+        )}
+
+        {/* قسم أدوات البائع والتاجر (يظهر فقط عند تسجيل الدخول كبائع) */}
+        {canAccessSellerTools && (
+          <div className="space-y-2">
+            <div className="text-xs font-black text-[#c59b5f] px-1">
+              {t('أدوات البائع والمستشار الذكي', 'Seller & Advisor Tools')}
             </div>
-          )}
-        </div>
-
-        {/* Scrollable Categories List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          {sections.map((sec, idx) => {
-            const SectionIcon = sec.icon;
-            return (
-              <div key={idx} className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-black text-slate-800 pb-1 border-b border-slate-100">
-                  <div className={`w-5 h-5 rounded-md ${sec.bgColor} ${sec.color} flex items-center justify-center`}>
-                    <SectionIcon className="w-3.5 h-3.5" />
-                  </div>
-                  <span>{sec.title}</span>
-                </div>
-
-                <div className="grid grid-cols-1 gap-1.5">
-                  {sec.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    const isActive = currentView.includes(item.id.replace('.html', ''));
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => handleLinkClick(item.id)}
-                        className={`w-full p-2.5 rounded-2xl border text-right transition-all flex items-center justify-between gap-3 cursor-pointer group ${
-                          isActive
-                            ? 'bg-[#153e4d]/5 border-[#153e4d]/40 text-[#153e4d]'
-                            : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                              item.highlight
-                                ? 'bg-gradient-to-tr from-[#153e4d] to-[#1f5b70] text-[#e9cca0]'
-                                : 'bg-slate-100 text-slate-600 group-hover:bg-[#153e4d]/10 group-hover:text-[#153e4d]'
-                            }`}
-                          >
-                            <ItemIcon className="w-4 h-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold text-slate-900 group-hover:text-[#153e4d] truncate">
-                              {item.label}
-                            </div>
-                            <div className="text-[10px] text-slate-400 truncate mt-0.5">{item.desc}</div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {item.badge && (
-                            <span className="text-[9px] bg-[#c59b5f]/20 text-[#825b23] border border-[#c59b5f]/30 px-2 py-0.5 rounded-full font-bold">
-                              {item.badge}
-                            </span>
-                          )}
-                          <ChevronLeft className="w-4 h-4 text-slate-300 group-hover:text-[#153e4d] transition-colors" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Quick Contact & Legal Footer */}
-          <div className="pt-3 border-t border-slate-200 space-y-2">
-            <span className="text-[11px] font-bold text-slate-500 block">الدعم والتواصل المباشر:</span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <a
-                href="https://wa.me/96894842840"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                <span>واتساب الدعم</span>
-              </a>
-
-              <a
-                href="tel:+96894842840"
-                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Phone className="w-3.5 h-3.5 text-[#153e4d]" />
-                <span>اتصال مباشر</span>
-              </a>
+            <div className="grid grid-cols-1 gap-2">
+              {sellerSections.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleGo(item.id)}
+                    className="w-full p-3 rounded-xl bg-[#153e4d]/10 dark:bg-slate-800/90 border border-[#c59b5f]/30 flex items-center gap-3 text-start cursor-pointer"
+                  >
+                    <div className="p-2 rounded-lg bg-[#153e4d] text-[#dfba83]">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
+        )}
 
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2">
-              <button
-                onClick={() => handleLinkClick('terms.html')}
-                className="hover:text-slate-600 underline cursor-pointer"
-              >
-                الشروط والأحكام
-              </button>
-              <span>•</span>
-              <button
-                onClick={() => handleLinkClick('privacy.html')}
-                className="hover:text-slate-600 underline cursor-pointer"
-              >
-                سياسة الخصوصية
-              </button>
-              <span>•</span>
-              <span className="text-[#c59b5f] font-bold">رؤية عمان 2040 🇴🇲</span>
-            </div>
+        {/* الأقسام العامة (متاحة للعميل والبائع) */}
+        <div className="space-y-2">
+          <div className="text-xs font-bold text-slate-400 px-1">
+            {t('أقسام المنصة', 'Platform Sections')}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {publicSections.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView.toLowerCase().includes(item.id.replace('.html', ''));
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleGo(item.id)}
+                  className={`p-3 rounded-xl border flex items-center gap-2.5 text-start transition cursor-pointer ${
+                    isActive
+                      ? 'bg-[#153e4d] text-[#e9cca0] border-[#153e4d]'
+                      : 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 border-slate-200/70 dark:border-slate-700'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#c59b5f]' : 'text-[#1f5b70] dark:text-[#dfba83]'}`} />
+                  <span className="text-xs font-bold truncate">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
