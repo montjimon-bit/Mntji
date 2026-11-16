@@ -18,8 +18,6 @@ import {
   Server,
   Layers,
   Star,
-  Bot,
-  Send,
 } from 'lucide-react';
 import { PRODUCTS_DATA, TRAINING_COURSES_DATA, SUCCESS_STORIES_DATA } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
@@ -36,12 +34,6 @@ interface HomeViewProps {
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
 
-interface GeneralChatMsg {
-  id: string;
-  sender: 'bot' | 'user';
-  text: string;
-}
-
 export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const { isAdmin } = useAuth();
   const { addToCart } = useCart();
@@ -52,19 +44,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
   const [addedToast, setAddedToast] = useState<string | null>(null);
   const [spotlightStats, setSpotlightStats] = useState<ProjectRatingStats | null>(null);
-
-  // حالة الشات بوت العام في الواجهة الرئيسية
-  const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<GeneralChatMsg[]>(() => [
-    {
-      id: 'welcome-bot',
-      sender: 'bot',
-      text:
-        lang === 'ar'
-          ? 'مرحباً بك في منصة مُنتَجي 🇴🇲! أنا المساعد العام للمنصة، اسألني عن سوق المنتجات العُمانية، الدورات التدريبية، طرق الدفع، أو كيفية الشراء والتسجيل.'
-          : 'Welcome to Montaji Platform 🇴🇲! I am the general assistant. Ask me about the Omani Marketplace, training courses, payment methods, or how to order.',
-    },
-  ]);
 
   const spotlightStory = SUCCESS_STORIES_DATA[0];
 
@@ -90,71 +69,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     setTimeout(() => setAddedToast(null), 2500);
   };
 
-  // محرك الرد الفوري للشات بوت العام
-  const generateGeneralBotReply = (question: string): string => {
-    const q = question.toLowerCase();
-    if (q.includes('سوق') || q.includes('منتج') || q.includes('شراء') || q.includes('market') || q.includes('product')) {
-      return t(
-        'يضم سوق المنتجات العُمانية تشكيلة من اللبان الظفاري، العسل، الحرف اليدوية، والابتكارات التقنية من كافة محافظات السلطنة. يمكنك الضغط على اسم أي تاجر تحت المنتج لعرض جميع منتجاته وتقييمه.',
-        'The Omani Marketplace features Dhofari frankincense, honey, handicrafts, and innovations from all governorates. Click any seller name under a product to view all their items and rating.'
-      );
-    }
-    if (q.includes('دور') || q.includes('تدريب') || q.includes('أكاديم') || q.includes('course') || q.includes('train')) {
-      return t(
-        'توفر أكاديمية مُنتَجي دورات تدريبية متخصصة في التجارة الإلكترونية، الإدارة المالية، والتراخيص التجارية مع شهادات معتمدة. يمكنك الدخول لقسم الدورات التدريبية والتسجيل مباشرة.',
-        'Montaji Academy offers specialized courses in e-commerce, finance, and business licensing with certificates. Visit the Training Courses section to enroll.'
-      );
-    }
-    if (q.includes('دفع') || q.includes('توصيل') || q.includes('شحن') || q.includes('pay') || q.includes('deliver')) {
-      return t(
-        'ندعم الدفع عبر Apple Pay، Google Pay، Samsung Pay، محفظة ثواني، وبطاقات بنك مسقط وعُمان نت، مع توصيل سريع لجميع محافظات سلطنة عُمان الـ 11.',
-        'We support Apple Pay, Google Pay, Samsung Pay, Thawani, and OmanNet/Bank Muscat cards, with fast delivery across all 11 Governorates of Oman.'
-      );
-    }
-    if (q.includes('تاجر') || q.includes('بائع') || q.includes('متجر') || q.includes('seller') || q.includes('store')) {
-      return t(
-        'عند تسجيل الدخول كـ "بائع"، يُفتح لك متجرك الخاص لإضافة منتجاتك وإدارة طلباتك، بالإضافة إلى الوصول الكامل لسوق المنتجات والدورات التدريبية.',
-        'When signing in as a Seller, your private store dashboard unlocks to manage products and orders, alongside full access to the marketplace and training courses.'
-      );
-    }
-    return t(
-      'يسعدنا خدمتك في منصة مُنتَجي! يمكنك تصفح سوق المنتجات العُمانية، التسجيل في الدورات التدريبية، أو التواصل معنا عبر واتساب الدعم المباشر (+968 9484 2840).',
-      'Happy to assist you on Montaji! You can browse the Omani Marketplace, enroll in Training Courses, or reach our WhatsApp support (+968 9484 2840).'
-    );
-  };
-
-  const handleSendGeneralChat = (textToSend?: string) => {
-    const query = (textToSend ?? chatInput).trim();
-    if (!query) return;
-
-    const userMsg: GeneralChatMsg = {
-      id: `u-${Date.now()}`,
-      sender: 'user',
-      text: query,
-    };
-    const botMsg: GeneralChatMsg = {
-      id: `b-${Date.now() + 1}`,
-      sender: 'bot',
-      text: generateGeneralBotReply(query),
-    };
-
-    setChatMessages((prev) => [...prev, userMsg, botMsg]);
-    if (!textToSend) setChatInput('');
-  };
-
-  const quickChatQuestions =
-    lang === 'ar'
-      ? [
-          'كيف أشتري من سوق المنتجات؟',
-          'ما هي الدورات التدريبية المتاحة؟',
-          'ما هي طرق الدفع والتوصيل؟',
-        ]
-      : [
-          'How do I shop on the Marketplace?',
-          'What training courses are available?',
-          'What payment & delivery options exist?',
-        ];
-
   return (
     <div className="space-y-16 pb-16">
       {/* Toast notification */}
@@ -165,165 +79,70 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Hero Section + General Chatbot */}
+      {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#122e3a] via-[#153e4d] to-[#0f242e] text-white pt-14 pb-20 px-4 sm:px-6 lg:px-8 border-b border-[#1f5b70]/40">
         <div className="absolute top-0 start-1/4 w-96 h-96 bg-[#1f5b70]/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 end-1/4 w-96 h-96 bg-[#c59b5f]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* العمود الرئيسي: العنوان + مربع سوق المنتجات + الدورات التدريبية + الشات بوت العام */}
-            <div className="lg:col-span-7 space-y-6 text-start">
-              <div className="inline-flex items-center gap-2 bg-[#c59b5f]/15 border border-[#c59b5f]/40 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#dfba83]">
-                <ShieldCheck className="w-4 h-4 text-[#c59b5f]" />
-                <span>
-                  {t(
-                    'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040',
-                    'National Umbrella for Omani Innovation - Oman Vision 2040'
-                  )}
-                </span>
-              </div>
-
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.22] sm:leading-[1.18]">
-                {t('انطلق بمشروعك في ', 'Launch Your Venture in ')}{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#dfba83] via-[#e9cca0] to-white">
-                  {t('سلطنة عُمان', 'Sultanate of Oman')}
-                </span>{' '}
-                {t('بذكاء متكامل', 'with Integrated Intelligence')}
-              </h1>
-
-              <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl font-normal">
+          <div className="max-w-3xl space-y-6 text-start">
+            <div className="inline-flex items-center gap-2 bg-[#c59b5f]/15 border border-[#c59b5f]/40 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#dfba83]">
+              <ShieldCheck className="w-4 h-4 text-[#c59b5f]" />
+              <span>
                 {t(
-                  'منصة "مُنتجي" المنظومة الوطنية المعتمدة لرواد الأعمال والمشاريع العُمانية: سوق رقمي وطني للمنتجات العُمانية الأصيلة، وبرامج ودورات تدريبية متخصصة.',
-                  'Montaji Platform is the certified national ecosystem for Omani entrepreneurs: a national digital marketplace for authentic Omani products and specialized training courses.'
+                  'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040',
+                  'National Umbrella for Omani Innovation - Oman Vision 2040'
                 )}
-              </p>
-
-              {/* الأزرار الرئيسية المطلوبة: سوق المنتجات + الدورات التدريبية + الشات بوت العام */}
-              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
-                <button
-                  onClick={() => onNavigate('marketplace.html')}
-                  className="w-full sm:w-auto justify-center px-6 py-3.5 bg-gradient-to-r from-[#c59b5f] to-[#dfba83] hover:from-[#b58b4f] hover:to-[#cfab73] text-slate-950 font-black rounded-xl shadow-lg shadow-[#c59b5f]/25 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer text-sm"
-                >
-                  <ShoppingBag className="w-4 h-4 text-slate-950" />
-                  <span>{t('سوق المنتجات', 'Products Marketplace')}</span>
-                </button>
-
-                <button
-                  onClick={() => onNavigate('training-courses.html')}
-                  className="w-full sm:w-auto justify-center px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer text-sm"
-                >
-                  <BookOpen className="w-4 h-4 text-[#dfba83]" />
-                  <span>{t('الدورات التدريبية', 'Training Courses')}</span>
-                </button>
-
-                <a
-                  href="#general-chatbot-box"
-                  className="w-full sm:w-auto justify-center px-5 py-3.5 bg-[#1f5b70]/70 hover:bg-[#1f5b70] text-[#e9cca0] border border-[#c59b5f]/30 font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer text-sm"
-                >
-                  <Bot className="w-4 h-4 text-[#dfba83]" />
-                  <span>{t('الشات بوت العام', 'General Chatbot')}</span>
-                </a>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-slate-700/60 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                  <span>{t('معتمد لحاملي بطاقة ريادة', 'Certified for Riyada Card Holders')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                  <span>{t('تكامل مع منصة عُمان للأعمال', 'Integrated with Oman Business Platform')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[#c59b5f] shrink-0" />
-                  <span>{t('توصيل لجميع محافظات السلطنة', 'Delivery Across All Governorates')}</span>
-                </div>
-              </div>
+              </span>
             </div>
 
-            {/* الشات بوت العام للمنصة (General Chatbot) */}
-            <div id="general-chatbot-box" className="lg:col-span-5">
-              <div className="bg-[#122e3a]/95 border border-[#1f5b70]/80 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-700/80">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#1f5b70] border border-[#c59b5f]/40 flex items-center justify-center text-white shadow-md">
-                      <Bot className="w-5 h-5 text-[#dfba83]" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-base">
-                        {t('الشات بوت العام لمنصة مُنتَجي', 'Montaji General Chatbot')}
-                      </h3>
-                      <p className="text-xs text-[#dfba83]">
-                        {t('مساعدك الفوري للاستفسارات والخدمات', 'Instant assistant for platform inquiries')}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 rounded-full font-bold">
-                    {t('متصل الآن', 'Online')}
-                  </span>
-                </div>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.22] sm:leading-[1.18]">
+              {t('انطلق بمشروعك في ', 'Launch Your Venture in ')}{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#dfba83] via-[#e9cca0] to-white">
+                {t('سلطنة عُمان', 'Sultanate of Oman')}
+              </span>{' '}
+              {t('بذكاء متكامل', 'with Integrated Intelligence')}
+            </h1>
 
-                {/* سجل المحادثة */}
-                <div className="my-4 space-y-2.5 max-h-56 overflow-y-auto pe-1">
-                  {chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed max-w-[88%] ${
-                          msg.sender === 'user'
-                            ? 'bg-[#c59b5f] text-slate-950 font-bold'
-                            : 'bg-[#153e4d]/90 text-slate-100 border border-[#1f5b70]/70'
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl font-normal">
+              {t(
+                'منصة "مُنتجي" المنظومة الوطنية المعتمدة لرواد الأعمال والمشاريع العُمانية: سوق رقمي وطني للمنتجات العُمانية الأصيلة، وبرامج ودورات تدريبية متخصصة.',
+                'Montaji Platform is the certified national ecosystem for Omani entrepreneurs: a national digital marketplace for authentic Omani products and specialized training courses.'
+              )}
+            </p>
 
-                {/* أسئلة سريعة */}
-                <div className="space-y-2 border-t border-slate-700/60 pt-3">
-                  <div className="flex flex-wrap gap-1.5">
-                    {quickChatQuestions.map((q) => (
-                      <button
-                        key={q}
-                        type="button"
-                        onClick={() => handleSendGeneralChat(q)}
-                        className="text-[11px] bg-[#153e4d]/80 hover:bg-[#1f5b70] text-[#e9cca0] px-2.5 py-1 rounded-lg border border-[#1f5b70] transition cursor-pointer"
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
+            {/* الأزرار الرئيسية: سوق المنتجات + الدورات التدريبية */}
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
+              <button
+                onClick={() => onNavigate('marketplace.html')}
+                className="w-full sm:w-auto justify-center px-6 py-3.5 bg-gradient-to-r from-[#c59b5f] to-[#dfba83] hover:from-[#b58b4f] hover:to-[#cfab73] text-slate-950 font-black rounded-xl shadow-lg shadow-[#c59b5f]/25 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer text-sm"
+              >
+                <ShoppingBag className="w-4 h-4 text-slate-950" />
+                <span>{t('سوق المنتجات', 'Products Marketplace')}</span>
+              </button>
 
-                  {/* حقل الإرسال */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSendGeneralChat();
-                    }}
-                    className="flex items-center gap-2 pt-1"
-                  >
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder={t('اكتب سؤالك للشات بوت العام...', 'Ask the general chatbot...')}
-                      className="flex-1 bg-[#153e4d] text-xs text-white placeholder-slate-400 px-3.5 py-2.5 rounded-xl border border-[#1f5b70] focus:outline-hidden focus:border-[#c59b5f]"
-                    />
-                    <button
-                      type="submit"
-                      className="p-2.5 bg-[#c59b5f] hover:bg-[#b58b4f] text-slate-950 rounded-xl transition cursor-pointer shrink-0"
-                      title={t('إرسال', 'Send')}
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
-                </div>
+              <button
+                onClick={() => onNavigate('training-courses.html')}
+                className="w-full sm:w-auto justify-center px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer text-sm"
+              >
+                <BookOpen className="w-4 h-4 text-[#dfba83]" />
+                <span>{t('الدورات التدريبية', 'Training Courses')}</span>
+              </button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-slate-700/60 text-xs text-slate-300">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#c59b5f] shrink-0" />
+                <span>{t('معتمد لحاملي بطاقة ريادة', 'Certified for Riyada Card Holders')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[#c59b5f] shrink-0" />
+                <span>{t('تكامل مع منصة عُمان للأعمال', 'Integrated with Oman Business Platform')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#c59b5f] shrink-0" />
+                <span>{t('توصيل لجميع محافظات السلطنة', 'Delivery Across All Governorates')}</span>
               </div>
             </div>
           </div>
