@@ -14,7 +14,6 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
-import { AwniChatWidget } from './components/AwniChatWidget';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobilePlatformHub } from './components/MobilePlatformHub';
 import { PlatformBreadcrumbs } from './components/PlatformBreadcrumbs';
@@ -200,6 +199,7 @@ function MainAppContent() {
         {renderCurrentView()}
       </main>
 
+      {/* 1. زر السماعة في اليسار بالأسفل */}
       <div className="fixed bottom-20 left-4 lg:bottom-6 lg:left-6 z-30 flex flex-col items-start gap-2 print:hidden">
         {contactMenuOpen && (
           <div className="bg-[#122e3a] border border-[#1f5b70] text-white p-3 rounded-2xl shadow-2xl space-y-2 text-xs font-semibold animate-in slide-in-from-bottom-3 w-56">
@@ -240,19 +240,6 @@ function MainAppContent() {
               <Phone className="w-4 h-4" />
               <span className="text-white font-mono" dir="ltr">+968 9484 2840</span>
             </a>
-
-            {canAccessSellerTools && (
-              <button
-                onClick={() => {
-                  setContactMenuOpen(false);
-                  navigateTo('ai-platform.html');
-                }}
-                className="w-full flex items-center gap-2 p-2 hover:bg-[#1f5b70]/40 rounded-xl transition-colors text-[#dfba83] text-start cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>{t('المستشار الذكي "عوني"', 'Smart Advisor "Awni"')}</span>
-              </button>
-            )}
           </div>
         )}
 
@@ -266,8 +253,21 @@ function MainAppContent() {
         </button>
       </div>
 
-      {/* المستشار عوني العائم يظهر للبائع فقط */}
-      {canAccessSellerTools && <AwniChatWidget onNavigate={navigateTo} />}
+      {/* 2. زر المستشار عوني في اليمين بالأسفل بنفس مستوى السماعة تماماً (يظهر للبائع والمشرف فقط) */}
+      {canAccessSellerTools && (
+        <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-30 print:hidden">
+          <button
+            onClick={() => navigateTo('ai-platform.html')}
+            className="bg-gradient-to-r from-[#153e4d] to-[#1f5b70] hover:from-[#122e3a] hover:to-[#153e4d] text-[#e9cca0] border border-[#c59b5f]/50 p-3 rounded-full shadow-2xl flex items-center gap-2 cursor-pointer hover:scale-105 transition-all"
+            title={t('المستشار الاقتصادي عوني', 'Awni Economic Advisor')}
+          >
+            <Sparkles className="w-5 h-5 text-[#c59b5f]" />
+            <span className="text-xs font-bold hidden sm:inline">
+              {t('المستشار عوني', 'Advisor Awni')}
+            </span>
+          </button>
+        </div>
+      )}
 
       <MobileBottomNav
         currentView={currentView}
