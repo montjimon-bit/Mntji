@@ -77,8 +77,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لحبيبات اللبان الظفاري (Frankincense resin)
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Frankincense_2005-12-31.jpg/800px-Frankincense_2005-12-31.jpg',
+    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80',
     stock: 25,
     featured: true,
   },
@@ -98,7 +97,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لعسل السدر الطبيعي الذهبي مع قرص العسل
+    // صورة عسل سدر طبيعي فاخر بدلاً من صورة البطيخ
     image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
     stock: 14,
     featured: true,
@@ -106,10 +105,10 @@ export const PRODUCTS_DATA: Product[] = [
   {
     id: 'prod-3',
     title: 'حلوى عمانية سلطانية زعفرانية بالمكسرات والسمن البقري',
-    description: 'حلوى عمانية مطبوخة على الحطب بالطريقة العمانية الأصيلة باستخدام السمن البقري المحلي، والزعفران الفاخر والهيل والمكسرات.',
+    description: 'حلوى عمانية مطبوخة على الحطب بالطريقة العمانية الأصيلة باستخدام السمن البقري المحلي، والزعفران الإيراني الفاخر والهيل والمكسرات.',
     price: 8.5,
     category: 'أغذية ومنتجات طبيعية',
-    subCategory: 'الحلوى العمانية والتمور',
+    subCategory: 'الحلوى العمانية التقليدية',
     governorate: 'محافظة جنوب الباطنة',
     seller: {
       name: 'مصنع بركاء للحلوى العمانية',
@@ -119,18 +118,17 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية للحلوى العمانية المزينة بالمكسرات في الصحن التقليدي
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Omani_halwa.jpg/800px-Omani_halwa.jpg',
+    image: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=800&q=80',
     stock: 40,
     featured: true,
   },
   {
     id: 'prod-4',
     title: 'طقم دلال وفناجين قهوة تراثية بصياغة فضية',
-    description: 'طقم تقديم قهوة عمانية أصيل مكسو بالنقوش الفضية الدقيقة المستوحاة من قلاع وحصون عُمان، يضم دلة عربية وستة فناجين منقوشة.',
+    description: 'طقم تقديم قهوة عمانية أصيل مكسو بالنقوش الفضية الدقيقة المستوحاة من قلاع وحصون عُمان، يضم دلة رسلان وستة فناجين منقوشة.',
     price: 45.0,
-    category: 'حرف وفنون يدوية',
-    subCategory: 'أعمال حرفية معاصرة',
+    category: 'مشغولات يدوية وفخار',
+    subCategory: 'الفضيات وأدوات الضيافة',
     governorate: 'محافظة مسقط',
     seller: {
       name: 'فضيات مطرح العريقة',
@@ -140,8 +138,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لدلة القهوة العربية التراثية والفناجين
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Dallah_coffee_pot.jpg/800px-Dallah_coffee_pot.jpg',
+    image: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80',
     stock: 8,
     featured: false,
   },
@@ -150,8 +147,8 @@ export const PRODUCTS_DATA: Product[] = [
     title: 'طقم فخار بهلاوي أصيل مطلي يدوياً بالنقوش التراثية',
     description: 'إبداع حرفي من واحة بهلاء التاريخية، مصنوع من طين الواحة الطبيعي ومحروق في الأفران التقليدية لحفظ برودة الماء الطبيعية.',
     price: 14.0,
-    category: 'حرف وفنون يدوية',
-    subCategory: 'أعمال حرفية معاصرة',
+    category: 'مشغولات يدوية وفخار',
+    subCategory: 'فخاريات بهلاء',
     governorate: 'محافظة الداخلية',
     seller: {
       name: 'فخاريات الواحة القديمة',
@@ -161,18 +158,17 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية للأواني الفخارية الطينية المصنوعة يدوياً
-    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80',
     stock: 19,
     featured: true,
   },
   {
     id: 'prod-6',
     title: 'خنجر عماني صوري أصلي فضة خالصة (صياغة يدوية)',
-    description: 'خنجر عماني بنصل فولاذي ومقبض مطعم بالفضة الخالصة وحزام منسوج بنقوش عمانية أصيلة مع غمد محفور بدقة.',
+    description: 'خنجر عماني بنصل فولاذي مقبض من الخشب الفاخر المطعم بالفضة الخالصة، وحزام منسوج بنقوش عمانية أصيلة مع غمد محفور بدقة.',
     price: 185.0,
     category: 'منتجات عطرية وتراثية',
-    subCategory: 'اللبان الظفاري والبخور الملكي',
+    subCategory: 'الخناجر والفضيات العمانية',
     governorate: 'محافظة جنوب الشرقية',
     seller: {
       name: 'دار الصياغة العمانية التراثية',
@@ -182,8 +178,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية للخنجر العماني الفضي التراثي
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Khanjar_Oman.jpg/800px-Khanjar_Oman.jpg',
+    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80',
     stock: 5,
     featured: true,
   },
@@ -193,7 +188,7 @@ export const PRODUCTS_DATA: Product[] = [
     description: 'مبخرة فاخرة مصنوعة من النحاس الخالص بتصميم تراثي عماني عريق لنشر رائحة اللبان والبخور في المجالس والمنازل.',
     price: 12.0,
     category: 'منتجات عطرية وتراثية',
-    subCategory: 'اللبان الظفاري والبخور الملكي',
+    subCategory: 'المباخر والمستلزمات التراثية',
     governorate: 'محافظة مسقط',
     seller: {
       name: 'مقتنيات مسقط التراثية',
@@ -203,8 +198,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لمبخرة تراثية يتصاعد منها دخان البخور واللبان
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Incense_burner_Oman.jpg/800px-Incense_burner_Oman.jpg',
+    image: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=800&q=80',
     stock: 30,
     featured: false,
   },
@@ -214,7 +208,7 @@ export const PRODUCTS_DATA: Product[] = [
     description: 'زيت نقي 100% مستخلص بالتقطير البخاري لدموع اللبان الحوجري، مثالي للعناية بالبشرة والاسترخاء العطري الفاخر.',
     price: 22.0,
     category: 'منتجات عطرية وتراثية',
-    subCategory: 'منتجات عضوية وزيوت طبيعية',
+    subCategory: 'الزيوت العطرية النقية',
     governorate: 'محافظة ظفار',
     seller: {
       name: 'تقطير لبان صلالة',
@@ -224,7 +218,6 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة زجاجة قطارة زيت عطري طبيعي نقي
     image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80',
     stock: 22,
     featured: false,
@@ -235,7 +228,7 @@ export const PRODUCTS_DATA: Product[] = [
     description: 'تمر خلاص فاخر منتقى حبة حبة من مزارع عبري الخصبة، محشو باللوز المحمص ومنكه بالهيل والزعفران الطبيعي.',
     price: 6.5,
     category: 'أغذية ومنتجات طبيعية',
-    subCategory: 'الحلوى العمانية والتمور',
+    subCategory: 'التمور العمانية الفاخرة',
     governorate: 'محافظة الظاهرة',
     seller: {
       name: 'تمور الظاهرة الطبيعية',
@@ -245,18 +238,17 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية للتمور العربية الفاخرة باللوز
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Dates_with_almonds.jpg/800px-Dates_with_almonds.jpg',
+    image: 'https://images.unsplash.com/photo-1599785209707-a456fc1337bb?auto=format&fit=crop&w=800&q=80',
     stock: 50,
     featured: false,
   },
   {
     id: 'prod-10',
-    title: 'سلة خوص من سعف النخيل المنسوج يدوياً (صنع في صحار)',
+    title: 'سلة خوص من سعف النخيل المنسوج يدوياً (ميد ان صحار)',
     description: 'مشغولات سعفية أصيلة بأيدي نساء حرفيات في شمال الباطنة، مدموجة بخيوط قطنية ملونة لحفظ الخبز والضيافة العمانية.',
     price: 7.0,
-    category: 'حرف وفنون يدوية',
-    subCategory: 'أعمال حرفية معاصرة',
+    category: 'مشغولات يدوية وفخار',
+    subCategory: 'السعينيات والمشغولات النسائية',
     governorate: 'محافظة شمال الباطنة',
     seller: {
       name: 'أنامل صحار الحرفية',
@@ -266,8 +258,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لسلال الخوص المنسوجة يدوياً من سعف النخيل
-    image: 'https://images.unsplash.com/photo-1595408076683-5d0c0d3e425e?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
     stock: 15,
     featured: false,
   },
@@ -277,7 +268,7 @@ export const PRODUCTS_DATA: Product[] = [
     description: 'تركيبة دهن عود شرقي فاخر معتق ممزوج بنفحات اللبان العماني الملكي والعنبر، ثبات يدوم طويلاً للمناسبات الرسمية.',
     price: 28.0,
     category: 'منتجات عطرية وتراثية',
-    subCategory: 'اللبان الظفاري والبخور الملكي',
+    subCategory: 'العطور الشرقية والعود',
     governorate: 'محافظة مسقط',
     seller: {
       name: 'أطياب السلطنة للعطور',
@@ -287,8 +278,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة زجاجة عطر شرقي فاخر بدهن العود
-    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
     stock: 12,
     featured: true,
   },
@@ -297,8 +287,8 @@ export const PRODUCTS_DATA: Product[] = [
     title: 'صندوق خشبي مبيت عماني مطعم بالنحاس الأصفر',
     description: 'مندوس عماني تقليدي مصغر لحفظ المجوهرات والفضيات، مصنوع من خشب الساج الأصيل مع مسامير نحاسية بارزة ونقوش محفورة باليد.',
     price: 38.0,
-    category: 'حرف وفنون يدوية',
-    subCategory: 'أعمال حرفية معاصرة',
+    category: 'مشغولات يدوية وفخار',
+    subCategory: 'المناديس والمقتنيات الخشبية',
     governorate: 'محافظة مسندم',
     seller: {
       name: 'حرفيو مسندم للتراث',
@@ -308,8 +298,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    // صورة حقيقية لصندوق خشبي تراثي مزخرف بالنحاس (مندوس)
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Omani_wooden_chest.jpg/800px-Omani_wooden_chest.jpg',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80',
     stock: 7,
     featured: false,
   },
@@ -319,7 +308,7 @@ export const TRAINING_COURSES_DATA: TrainingCourse[] = [
   {
     id: 'course-1',
     title: 'إدارة وتوسيع المشاريع الناشئة وفق رؤية عُمان 2040',
-    category: 'التشريعات والتراخيص الحكومية',
+    category: 'إدارة الأعمال والاستثمار',
     instructor: 'د. سالم بن ناصر الحارثي',
     duration: '4 أسابيع (16 ساعة)',
     seatsAvailable: 18,
@@ -337,7 +326,7 @@ export const TRAINING_COURSES_DATA: TrainingCourse[] = [
   {
     id: 'course-2',
     title: 'التسويق الرقمي وبناء الهوية التجارية للمنتجات الوطنية',
-    category: 'التسويق والتجارة الإلكترونية',
+    category: 'التسويق الرقمي والمبيعات',
     instructor: 'أ. مريم بنت عبدالله البلوشية',
     duration: '3 أسابيع (12 ساعة)',
     seatsAvailable: 24,
@@ -355,7 +344,7 @@ export const TRAINING_COURSES_DATA: TrainingCourse[] = [
   {
     id: 'course-3',
     title: 'دراسات الجدوى الاقتصادية وحساب نقطة التعادل',
-    category: 'الإدارة والمالية',
+    category: 'المالية والاقتصاد',
     instructor: 'م. خالد بن راشد المعمري',
     duration: 'أسبوعان (8 ساعات)',
     seatsAvailable: 12,
@@ -380,14 +369,13 @@ export const SUCCESS_STORIES_DATA: SuccessStory[] = [
     sector: 'الابتكار والتقنية الزراعية',
     governorate: 'محافظة الداخلية',
     yearEstablished: 2023,
-    story: 'بدأ المشروع كنموذج ابتكاري لفحص النخيل ومكافحة سوسة النخيل الحمراء بواسطة الذكاء الاصطناعي وأجهزة الاستشعار الذكية، ثم تحول عبر منصة مُنتجي إلى شركة ناشئة تخدم مزارع السلطنة.',
+    story: 'بدأ المشروع كمجسم ابتكاري ونموذج أولي لفحص النخيل ومكافحة سوسة النخيل الحمراء بواسطة الذكاء الاصطناعي، ثم تحول عبر منصة مُنتجي إلى شركة ناشئة تخدم مزارع السلطنة.',
     achievements: [
       'فحص أكثر من 15,000 نخلة في مختلف ولايات الداخلية',
       'الحصول على شهادة اعتماد من ريادة ودعم الابتكار الوطني',
       'تحقيق نمو في المبيعات بنسبة تفوق 140% خلال عام واحد',
     ],
-    // صورة حقيقية لواحة نخيل عُمانية
-    image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
     growthRate: '+140%',
   },
   {
@@ -403,7 +391,7 @@ export const SUCCESS_STORIES_DATA: SuccessStory[] = [
       'توزيع المنتجات عبر أكثر من 30 متجراً محلياً ومنصة مُنتجي',
       'تحقيق مبيعات شهرية منتظمة تغطي تكاليف التوسع وتوظيف كادر عماني',
     ],
-    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
     growthRate: '+95%',
   },
 ];
