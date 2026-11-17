@@ -16,7 +16,7 @@ const LanguageContext = createContext<LanguageContextType>({
   isRtl: true,
 });
 
-// قاموس شامل يغطي جميع صفحات المنصة، القوائم، النماذج، المنتجات، الدورات، لوحة التاجر، والسلة
+// قاموس شامل يغطي 100% من نصوص، فقرات، منتجات، دورات، وقصص نجاح المنصة
 const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   // 1. الهيدر والتنقل العام
   'منصة منتجي': 'Montaji Platform',
@@ -40,6 +40,8 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'دراسات الجدوى': 'Feasibility Studies',
   'إعداد دراسة جدوى': 'Feasibility Study',
   'المستشار عوني': 'Advisor Awni',
+  'المستشار الاقتصادي "عوني"': 'Economic Advisor "Awni"',
+  'مستشارك الذكي في منصة مُنتَجي 🇴🇲': 'Your Smart Omani Advisor 🇴🇲',
   'عوني': 'Awni',
   'متجري الخاص': 'My Private Store',
   'متجري': 'My Store',
@@ -62,7 +64,7 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'ابحث عن منتج، تاجر، مشروع...': 'Search product, seller, project...',
   'ابحث في منصة منتجي...': 'Search Montaji...',
 
-  // 2. الصفحة الرئيسية (HomeView)
+  // 2. الصفحة الرئيسية والفقرات الوصفية
   'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040': 'National Umbrella for Omani Innovation - Oman Vision 2040',
   'انطلق بمشروعك في': 'Launch Your Venture in',
   'سلطنة عُمان': 'Sultanate of Oman',
@@ -81,25 +83,121 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'نسبة الرضا والنجاح': 'Customer Satisfaction',
   'دليل الوصول السريع والمنظم': 'Organized Platform Directory',
   'خريطة أقسام المنصة المنظمة': 'Organized Platform Sections Map',
+  'تنظيم متكامل يضمن وصولك الفوري إلى سوق المنتجات العمانية والدورات التدريبية بكل سهولة ووضوح.':
+    'Structured navigation giving you instant access to the Omani Marketplace and Training Courses.',
   'سوق المنتجات والتسوق': 'Products Marketplace & Shopping',
+  'تصفح المنتجات العمانية الأصيلة، العسل، اللبان، والحرف اليدوية مع استعراض متجر كل تاجر وتقييمه وتوصيل لكل المحافظات.':
+    'Browse authentic Omani products, honey, frankincense, and handicrafts, view each seller store and rating, with delivery across Oman.',
   'سلة المشتريات والإنهاء': 'Shopping Cart & Checkout',
   'قائمة المفضلة': 'My Wishlist',
   'متابعة الشحنات والطلبات': 'Track Orders & Shipments',
   'الدورات التدريبية وبناء القدرات': 'Training Courses & Capacity Building',
+  'تطوير مهارات ريادة الأعمال، ورش تدريبية معتمدة، وتجارب ملهمة لشركات عمانية ناشئة حققت نمواً استثنائياً.':
+    'Develop entrepreneurship skills through certified workshops and explore inspiring success stories of Omani startups.',
   'قصص النجاح والمشاريع المسجلة': 'Success Stories & Registered Projects',
   'قصص نجاح رواد الأعمال': 'Success Stories',
+  'تقييم المشاريع ⭐': 'Project Ratings ⭐',
   'سوق ريادة الأعمال': 'Entrepreneurship Marketplace',
   'منتجات وابتكارات عمانية أصيلة': 'Authentic Omani Products & Innovations',
+  'منتجات متميزة مسجلة برعاية رواد الأعمال وحاملي بطاقة ريادة من كافة المحافظات.':
+    'Featured products from Riyada-certified entrepreneurs across all governorates.',
   'دفع رقمي آمن 100% في سلطنة عمان': '100% Secure Digital Payments in Oman',
   'ادفع بسهولة عبر Apple Pay و Google Pay و Samsung Pay': 'Pay Easily via Apple Pay, Google Pay & Samsung Pay',
+  'ندعم كافة المحافظات الرقمية وبطاقات الخصم المباشر (عُمان نت وبنك مسقط) ومحفظة ثواني لتجربة تسوق آمنة وسريعة.':
+    'Supporting all digital wallets, OmanNet & Bank Muscat debit cards, and Thawani for a fast, secure checkout.',
+  'ندعم كافة المحافظ الرقمية وبطاقات الخصم المباشر (عُمان نت وبنك مسقط) ومحفظة ثواني.':
+    'Supporting all digital wallets, OmanNet & Bank Muscat debit cards, and Thawani.',
+  'ثواني Thawani': 'Thawani',
   'بناء القدرات': 'Capacity Building',
   'ورش وبرامج تدريبية متخصصة': 'Specialized Training Workshops & Programs',
+  'دورات معتمدة لرواد الأعمال بالتعاون مع هيئة ريادة والخبراء الماليين في عمان.':
+    'Certified courses for entrepreneurs in collaboration with Riyada and Omani financial experts.',
   'عرض كل الدورات والورش': 'View All Courses & Workshops',
   'قراءة قصص النجاح الأخرى': 'Read More Success Stories',
 
-  // 3. سوق المنتجات (MarketplaceView)
+  // 3. المنتجات الـ 6 (العناوين، الأوصاف، التصنيفات، والمتاجر)
+  'لبان حوجري ظفاري ملكي نقي قطفة أولى': 'Royal First-Harvest Dhofari Hojari Frankincense',
+  'لبان حوجري نادر طبيعي 100% مستخرج من جبال سمحان بمحافظة ظفار، ذو جودة طبية وعطرية فائقة برائحة ليمونية زكية.':
+    '100% pure rare Hojari frankincense harvested from Jabal Samhan in Dhofar, offering therapeutic and aromatic quality with a crisp citrus scent.',
+  'مؤسسة كنوز اللبان العمانية': 'Omani Frankincense Treasures Est.',
+  'اللبان الظفاري والبخور الملكي': 'Dhofari Frankincense & Royal Incense',
+
+  'عسل سدر عماني جبلي أصلي (موسم الجبل الأخضر)': 'Authentic Omani Mountain Sidr Honey (Jabal Akhdar)',
+  'عسل نحل بري نقي مفحوص مخبرياً من أزهار السدر البري في جبال الجبل الأخضر، خالٍ تماماً من أي إضافات أو تغذية سكرية.':
+    'Lab-tested pure wild Sidr honey harvested from Jabal Akhdar mountains, 100% free from additives or sugar feeding.',
+  'مناحل الجبل الأخضر الحديثة': 'Modern Jabal Akhdar Apiaries',
+  'عسل عماني مفحوص': 'Lab-Tested Omani Honey',
+
+  'حلوى عمانية سلطانية زعفرانية بالمكسرات والسمن البقري': 'Royal Saffron Omani Halwa with Nuts & Local Ghee',
+  'حلوى عمانية مطبوخة على الحطب بالطريقة العمانية الأصيلة باستخدام السمن البقري المحلي، والزعفران الإيراني الفاخر والهيل والمكسرات.':
+    'Traditional wood-fired Omani Halwa crafted with local cow ghee, premium saffron, cardamom, and roasted nuts.',
+  'مصنع بركاء للحلوى العمانية': 'Barka Omani Halwa Factory',
+  'الحلوى العمانية التقليدية': 'Traditional Omani Halwa',
+  'الحلوى العمانية والتمور': 'Omani Halwa & Dates',
+
+  'طقم دلال وفناجين قهوة تراثية بصياغة فضية': 'Heritage Silver-Crafted Arabic Dallah & Coffee Cups Set',
+  'طقم تقديم قهوة عمانية أصيل مكسو بالنقوش الفضية الدقيقة المستوحاة من قلاع وحصون عُمان، يضم دلة رسلان وستة فناجين منقوشة.':
+    'Authentic Omani coffee serving set engraved with intricate silver motifs inspired by Omani forts, including a Dallah and six cups.',
+  'فضيات مطرح العريقة': 'Heritage Muttrah Silversmiths',
+  'الفضيات وأدوات الضيافة': 'Silverware & Hospitality',
+
+  'طقم فخار بهلاوي أصيل مطلي يدوياً بالنقوش التراثية': 'Authentic Hand-Painted Bahla Pottery Set',
+  'إبداع حرفي من واحة بهلاء التاريخية، مصنوع من طين الواحة الطبيعي ومحروق في الأفران التقليدية لحفظ برودة الماء الطبيعية.':
+    'Artisanal pottery from historic Bahla Oasis, crafted from natural clay and kiln-fired to naturally keep water cool.',
+  'فخاريات الواحة القديمة': 'Old Oasis Pottery',
+  'فخاريات بهلاء': 'Bahla Pottery',
+
+  'خنجر عماني صوري أصلي فضة خالصة (صياغة يدوية)': 'Authentic Handcrafted Suri Pure Silver Omani Khanjar',
+  'خنجر عماني بنصل فولاذي مقبض من الخشب الفاخر المطعم بالفضة الخالصة، وحزام منسوج بنقوش عمانية أصيلة مع غمد محفور بدقة.':
+    'Traditional Omani Khanjar with steel blade, pure silver-inlaid hilt, embroidered belt, and finely engraved scabbard.',
+  'دار الصياغة العمانية التراثية': 'Omani Heritage Silversmith House',
+  'الخناجر والفضيات العمانية': 'Omani Khanjars & Silverware',
+
+  // 4. الدورات التدريبية الـ 3 (العناوين، المدربون، المحاور)
+  'إدارة وتوسيع المشاريع الناشئة وفق رؤية عُمان 2040': 'Managing & Scaling Startups under Oman Vision 2040',
+  'إدارة الأعمال والاستثمار': 'Business & Investment',
+  'د. سالم بن ناصر الحارثي': 'Dr. Salim Nasser Al Harthi',
+  '4 أسابيع (16 ساعة)': '4 Weeks (16 Hours)',
+  'تحديد القيمة المحلية المضافة (ICV) للمشروع': 'Defining In-Country Value (ICV) for your project',
+  'بناء نموذج العمل التجاري وتوليد الإيرادات': 'Building a sustainable business model & revenue streams',
+  'إدارة التدفقات النقدية وهوامش الأرباح بالريال العماني': 'Managing cash flows & profit margins in OMR',
+  'الاستفادة من التسهيلات والتمويلات الوطنية': 'Leveraging national financing and SME facilities',
+
+  'التسويق الرقمي وبناء الهوية التجارية للمنتجات الوطنية': 'Digital Marketing & Branding for National Products',
+  'التسويق الرقمي والمبيعات': 'Digital Marketing & Sales',
+  'أ. مريم بنت عبدالله البلوشية': 'Ms. Maryam Abdullah Al Balushi',
+  '3 أسابيع (12 ساعة)': '3 Weeks (12 Hours)',
+  'إدارة الحملات الإعلانية الموجهة للسوق المحلي والخليجي': 'Running targeted ad campaigns for Oman & GCC markets',
+  'تصوير وإبراز المنتجات باحترافية على منصات التجارة': 'Professional product photography for e-commerce',
+  'صياغة المحتوى التسويقي الجذاب عبر منصة مُنتجي': 'Crafting compelling marketing copy on Montaji',
+  'أتمتة خدمة العملاء واستقبال الطلبات عبر واتساب': 'Automating customer support & WhatsApp orders',
+
+  'دراسات الجدوى الاقتصادية وحساب نقطة التعادل': 'Economic Feasibility Studies & Break-Even Analysis',
+  'المالية والاقتصاد': 'Finance & Economics',
+  'م. خالد بن راشد المعمري': 'Eng. Khalid Rashid Al Maamari',
+  'أسبوعان (8 ساعات)': '2 Weeks (8 Hours)',
+  'حساب التكاليف الثابتة والمتغيرة بدقة': 'Accurately calculating fixed and variable costs',
+  'تحديد سعر بيع الوحدة وهامش المساهمة الربحي': 'Setting unit selling price and contribution margin',
+  'حساب نقطة التعادل النقدية ومعدل العائد الاستثماري (ROI)': 'Calculating cash break-even point and ROI',
+  'تطبيق خطط التوسع المالي باستخدام الذكاء الاصطناعي': 'Applying financial expansion plans using AI',
+
+  'مجاناً برعاية ريادة': 'Free (Sponsored by Riyada)',
+
+  // 5. قصص النجاح (Success Stories)
+  'تقنيات النخلة الذكية': 'Smart Palm Technologies',
+  'أحمد بن حمد الشبيبي': 'Ahmed Hamad Al Shukaili',
+  'الابتكار والتقنية الزراعية': 'AgriTech & Innovation',
+  'بدأ المشروع كمجسم ابتكاري ونموذج أولي لفحص النخيل ومكافحة سوسة النخيل الحمراء بواسطة الذكاء الاصطناعي، ثم تحول عبر منصة مُنتجي إلى شركة ناشئة تخدم مزارع السلطنة.':
+    'Started as an AI prototype to inspect date palms and combat red palm weevil, evolving through Montaji into a startup serving farms across Oman.',
+  'تقطير اللبان العضوي الفاخر': 'Luxury Organic Frankincense Distillation',
+  'فاطمة بنت سالم الحبسية': 'Fatma Salim Al Habsi',
+  'الصناعات العطرية والتحويلية': 'Aromatic & Manufacturing Industries',
+
+  // 6. سوق المنتجات والسلة والدفع والدورات والتذييل
   'السوق الوطني الموحد للمنتجات العمانية': 'National Omani Products Marketplace',
   'تسوق إبداعات رواد الأعمال العمانيين': 'Shop Authentic Omani Creations',
+  'منتجات عمانية أصيلة وابتكارات تقنية حديثة من مشاريع معتمدة ومسجلة في ريادة من كافة محافظات السلطنة.':
+    'Authentic Omani goods and innovations from licensed Riyada entrepreneurs across all governorates.',
   'ابحث عن منتج وطني، صانع، أو نوع الحرفة...': 'Search product, seller, or craft...',
   'كل المحافظات (عُمان)': 'All Governorates (Oman)',
   'كل التصنيفات الفرعية': 'All Subcategories',
@@ -111,36 +209,24 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'منتجات عطرية وتراثية': 'Fragrances & Heritage',
   'أغذية ومنتجات طبيعية': 'Natural Foods & Honey',
   'حرف وفنون يدوية': 'Handicrafts & Pottery',
+  'مشغولات يدوية وفخار': 'Handicrafts & Pottery',
   'تقنية وابتكار': 'Tech & Innovation',
   'حاملو بطاقة ريادة فقط': 'Riyada Card Holders Only',
   'تم العثور على': 'Found',
   'منتج': 'products',
-  'لم يتم العثور على منتجات مطابقة': 'No matching products found',
-  'إعادة تعيين الفلاتر': 'Reset Filters',
   'أضف للسلة': 'Add to Cart',
   'إضافة للسلة': 'Add to Cart',
   'إضافة إلى السلة': 'Add to Cart',
-  'السعر الإجمالي': 'Total Price',
-  'المخزون المتوفر:': 'Available Stock:',
-  'قطعة': 'pcs',
-  'المؤسسة / البائع:': 'Store / Seller:',
-  'الاعتماد:': 'Verification:',
-  'حامل بطاقة ريادة معتمد 🇴🇲': 'Certified Riyada Card Holder 🇴🇲',
   'بطاقة ريادة': 'Riyada Card',
   'ريادة': 'Riyada',
   'ر.ع.': 'OMR',
   'ر.ع': 'OMR',
-  'مشاركة': 'Share',
-  'حذف': 'Delete',
-  'في المفضلة': 'In Wishlist',
-  'حفظ بالمفضلة': 'Save to Wishlist',
   'مشتري مؤكد': 'Verified Buyer',
   'تقييم النجوم:': 'Star Rating:',
   'قيّم طلبك': 'Rate Order',
   'اكتب مراجعة': 'Write Review',
-  'العودة إلى جميع المتاجر والمنتجات': 'Back to All Stores & Products',
 
-  // 4. المحافظات العمانية
+  // المحافظات
   'محافظة مسقط': 'Muscat Governorate',
   'محافظة ظفار': 'Dhofar Governorate',
   'محافظة الداخلية': 'Ad Dakhiliyah Governorate',
@@ -153,42 +239,11 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'محافظة مسندم': 'Musandam',
   'محافظة الوسطى': 'Al Wusta',
 
-  // 5. السلة والدفع والطلبات (Cart, Checkout, Orders, Wishlist)
-  'سلة المشتريات فارغة': 'Your Shopping Cart is Empty',
-  'تصفح السوق': 'Browse Marketplace',
-  'إتمام الطلب': 'Proceed to Checkout',
-  'إتمام الدفع': 'Complete Checkout',
-  'تأكيد الطلب': 'Confirm Order',
-  'ملخص الطلب': 'Order Summary',
-  'المجموع الفرعي': 'Subtotal',
-  'رسوم التوصيل': 'Delivery Fee',
-  'الخصم': 'Discount',
-  'الإجمالي النهائي': 'Grand Total',
-  'الإجمالي': 'Total',
-  'كود الخصم': 'Promo Code',
-  'تطبيق': 'Apply',
-  'بيانات التوصيل': 'Delivery Details',
-  'الاسم الكامل': 'Full Name',
-  'رقم الهاتف': 'Phone Number',
-  'المحافظة': 'Governorate',
-  'العنوان التفصيلي': 'Detailed Address',
-  'طريقة الدفع': 'Payment Method',
-  'الدفع عند الاستلام': 'Cash on Delivery',
-  'تحويل بنكي': 'Bank Transfer',
-  'بطاقة بنكية / محفظة رقمية': 'Card / Digital Wallet',
-  'طلباتي': 'My Orders',
-  'متابعة طلباتي': 'Track My Orders',
-  'رقم الطلب': 'Order ID',
-  'حالة الطلب': 'Order Status',
-  'قيد التجهيز': 'Preparing',
-  'تم الشحن': 'Shipped',
-  'تم التوصيل': 'Delivered',
-  'قائمة أمنياتي': 'My Wishlist',
-  'المفضلة': 'Wishlist',
-
-  // 6. الدورات التدريبية (TrainingCoursesView)
+  // أكاديمية الدورات والتذييل
   'أكاديمية مُنتجي لريادة الأعمال والتدريب المهني': 'Montaji Entrepreneurship & Training Academy',
   'برامج تدريبية متخصصة لتطوير مهارات الرواد': 'Specialized Training Programs for Entrepreneurs',
+  'ورش عمل ودورات تفاعلية معتمدة يقدمها نخبة من الخبراء والاستشاريين العمانيين في مجالات الإدارة المالية، وتراخيص الأعمال، والتسويق الرقمي الحديث.':
+    'Certified interactive workshops delivered by Omani experts covering financial management, business licensing, and modern digital marketing.',
   'المجال:': 'Field:',
   'المستوى:': 'Level:',
   'جميع المستويات': 'All Levels',
@@ -198,61 +253,27 @@ const FULL_PLATFORM_DICTIONARY: Record<string, string> = {
   'التشريعات والتراخيص الحكومية': 'Licensing & Regulations',
   'الإدارة والمالية': 'Finance & Management',
   'التسويق والتجارة الإلكترونية': 'E-Commerce & Marketing',
-  'التقنية والابتكار': 'Tech & Innovation',
   'المحاضر:': 'Instructor:',
   'أبرز المحاور التدريبية:': 'Key Course Modules:',
   'التسجيل بالدورة': 'Enroll Now',
-  'تأكيد التسجيل وحجز المقعد': 'Confirm Enrollment',
-  'تم تسجيلك بنجاح في الدورة!': 'Successfully Enrolled!',
-  'مجاني': 'Free',
-
-  // 7. لوحة التاجر والمستشار عوني ودراسة الجدوى
-  'لوحة تحكم البائع': 'Seller Dashboard',
-  'إضافة منتج جديد': 'Add New Product',
-  'اسم المنتج': 'Product Name',
-  'السعر (ر.ع.)': 'Price (OMR)',
-  'الكمية المتوفرة': 'Available Stock',
-  'التصنيف': 'Category',
-  'وصف المنتج': 'Product Description',
-  'حفظ المنتج': 'Save Product',
-  'إجمالي المبيعات': 'Total Sales',
-  'الطلبات الواردة': 'Incoming Orders',
-  'منتجاتي': 'My Products',
-  'المستشار الاقتصادي "عوني"': 'Economic Advisor "Awni"',
-  'توليد دراسة الجدوى': 'Generate Feasibility Study',
-  'اسم المشروع': 'Project Name',
-  'رأس المال المتوقع': 'Estimated Budget',
-  'الفئة المستهدفة': 'Target Audience',
-
-  // 8. تسجيل الدخول والتسجيل (AuthModal)
-  'البريد الإلكتروني': 'Email Address',
-  'كلمة المرور': 'Password',
-  'نوع الحساب': 'Account Type',
-  'عميل': 'Customer',
-  'بائع': 'Seller',
-  'تاجر / رائد أعمال': 'Seller / Entrepreneur',
-  'اسم المتجر': 'Store Name',
-  'نسيت كلمة المرور؟': 'Forgot Password?',
-  'ليس لديك حساب؟ أنشئ حساباً جديداً': "Don't have an account? Register",
-  'لديك حساب بالفعل؟ سجل الدخول': 'Already have an account? Sign In',
-
-  // 9. التذييل (Footer)
+  'منصة عمانية متكاملة تهدف إلى تسريع نمو الشركات الناشئة ورواد الأعمال العمانيين، وربط المنتجات الوطنية المبتكرة بالأسواق المحلية والخليجية دعماً لرؤية عُمان 2040.':
+    'An integrated Omani platform dedicated to empowering startups and connecting authentic Omani products to local and GCC markets under Oman Vision 2040.',
+  'متوافقة مع معايير ريادة ووزارة التجارة العمانية': 'Compliant with Riyada & MOCI Oman Standards',
   'أقسام المنصة': 'Platform Sections',
   'خدمات الرواد والعملاء': 'User & Seller Services',
   'بيانات التواصل المباشر': 'Direct Contact',
-  'الشروط والأحكام العامة': 'Terms & Conditions',
-  'سياسة الخصوصية وحماية البيانات': 'Privacy Policy',
+  'مسقط، سلطنة عُمان - واحة المعرفة': 'Muscat, Oman - Knowledge Oasis',
+  'بوابات وطنية شريكة:': 'Partner Portals:',
+  'هيئة ريادة • منصة عُمان للأعمال • بنك التنمية العماني': 'Riyada • Oman Business Platform • Oman Development Bank',
   'شروط الاستخدام': 'Terms of Use',
   'سياسة الخصوصية': 'Privacy Policy',
   'صُنع بفخر في سلطنة عمان 🇴🇲': 'Proudly Made in Oman 🇴🇲',
 };
 
-// ترتيب المفاتيح من الأطول إلى الأقصر لضمان دقة استبدال العبارات المركبة أولاً
 const SORTED_DICTIONARY_KEYS = Object.keys(FULL_PLATFORM_DICTIONARY).sort(
   (a, b) => b.length - a.length
 );
 
-// مخازن لحفظ النصوص العربية الأصلية لاستعادتها بدقة تامة عند العودة للعربية
 const originalTextNodeMap = new WeakMap<Text, string>();
 const originalPlaceholderMap = new WeakMap<HTMLElement, string>();
 const originalTitleMap = new WeakMap<HTMLElement, string>();
@@ -261,28 +282,24 @@ function translateArabicToEnglish(rawText: string): string {
   const trimmed = rawText.trim();
   if (!trimmed || !/[\u0600-\u06FF]/.test(trimmed)) return rawText;
 
-  // 1. مطابقة كاملة مباشرة
   if (FULL_PLATFORM_DICTIONARY[trimmed]) {
     return rawText.replace(trimmed, FULL_PLATFORM_DICTIONARY[trimmed]);
   }
 
-  // 2. ترجمة الأنماط الديناميكية الشائعة
   let result = rawText;
 
-  // مثال: "المقاعد المتبقية: 12" -> "Seats left: 12"
+  // ترجمة الأنماط الديناميكية
   result = result.replace(/المقاعد المتبقية:\s*(\d+)/g, 'Seats left: $1');
-  // مثال: "مستوى: مبتدئ" -> "Level: Beginner"
   result = result.replace(/مستوى:\s*مبتدئ/g, 'Level: Beginner');
   result = result.replace(/مستوى:\s*متوسط/g, 'Level: Intermediate');
   result = result.replace(/مستوى:\s*متقدم/g, 'Level: Advanced');
-  // مثال: "(3 مراجعات)" أو "3 مراجعات" -> "3 reviews"
   result = result.replace(/(\d+)\s*مراجعات/g, '$1 reviews');
-  // مثال: "عرض السلة (2 عناصر)" -> "View Cart (2 items)"
   result = result.replace(/عرض السلة\s*\((\d+)\s*عناصر\)/g, 'View Cart ($1 items)');
-  // مثال: "استعراض كافة المنتجات (6)" -> "View All Products (6)"
   result = result.replace(/استعراض كافة المنتجات\s*\((\d+)\)/g, 'View All Products ($1)');
+  result = result.replace(/قصة نجاح ملهمة من\s*/g, 'Inspiring Success Story from ');
+  result = result.replace(/المؤسس:\s*/g, 'Founder: ');
+  result = result.replace(/•\s*تأسست عام\s*(\d+)/g, '• Est. $1');
 
-  // 3. استبدال العبارات والكلمات من القاموس الشامل
   for (const arKey of SORTED_DICTIONARY_KEYS) {
     if (result.includes(arKey)) {
       result = result.split(arKey).join(FULL_PLATFORM_DICTIONARY[arKey]);
@@ -295,7 +312,6 @@ function translateArabicToEnglish(rawText: string): string {
 function translateEntirePage(targetLang: AppLang) {
   if (typeof document === 'undefined' || !document.body) return;
 
-  // أ) ترجمة جميع العقد النصية في الصفحة
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
   let currentNode: Node | null;
 
@@ -324,7 +340,6 @@ function translateEntirePage(targetLang: AppLang) {
     }
   }
 
-  // ب) ترجمة نصوص حقول الإدخال (placeholder) وعناوين التلميح (title)
   const interactiveElements = document.querySelectorAll<HTMLElement>('[placeholder], [title]');
   interactiveElements.forEach((el) => {
     const ph = el.getAttribute('placeholder');
@@ -369,10 +384,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-    // تطبيق الترجمة فوراً على كامل الصفحة
     translateEntirePage(lang);
 
-    // مراقبة أي عناصر أو نوافذ جديدة تُفتح وترجمتها تلقائياً
     let frameId: number | null = null;
     const observer = new MutationObserver(() => {
       if (lang === 'en') {
