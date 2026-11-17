@@ -77,7 +77,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية لحبيبات اللبان الظفاري (Frankincense resin)
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Frankincense_2005-12-31.jpg/800px-Frankincense_2005-12-31.jpg',
     stock: 25,
     featured: true,
   },
@@ -97,6 +98,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
+    // صورة حقيقية لعسل السدر الطبيعي الذهبي مع قرص العسل
     image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
     stock: 14,
     featured: true,
@@ -117,7 +119,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية للحلوى العمانية المزينة بالمكسرات في الصحن التقليدي
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Omani_halwa.jpg/800px-Omani_halwa.jpg',
     stock: 40,
     featured: true,
   },
@@ -137,7 +140,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية لدلة القهوة العربية التراثية والفناجين
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Dallah_coffee_pot.jpg/800px-Dallah_coffee_pot.jpg',
     stock: 8,
     featured: false,
   },
@@ -157,7 +161,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية للأواني الفخارية الطينية المصنوعة يدوياً
+    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80',
     stock: 19,
     featured: true,
   },
@@ -177,7 +182,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية للخنجر العماني الفضي التراثي
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Khanjar_Oman.jpg/800px-Khanjar_Oman.jpg',
     stock: 5,
     featured: true,
   },
@@ -197,7 +203,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية لمبخرة تراثية يتصاعد منها دخان البخور واللبان
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Incense_burner_Oman.jpg/800px-Incense_burner_Oman.jpg',
     stock: 30,
     featured: false,
   },
@@ -217,6 +224,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
+    // صورة زجاجة قطارة زيت عطري طبيعي نقي
     image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80',
     stock: 22,
     featured: false,
@@ -237,14 +245,15 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1593001874117-c99c800e3eb7?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية للتمور العربية الفاخرة باللوز
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Dates_with_almonds.jpg/800px-Dates_with_almonds.jpg',
     stock: 50,
     featured: false,
   },
   {
     id: 'prod-10',
     title: 'سلة خوص من سعف النخيل المنسوج يدوياً (صنع في صحار)',
-    description: 'مشغولات سعفية أصيلة بأيدي نساء حرفيات في شمال الباطنة، مدموجة بخيوط ملونة لحفظ الخبز والضيافة العمانية.',
+    description: 'مشغولات سعفية أصيلة بأيدي نساء حرفيات في شمال الباطنة، مدموجة بخيوط قطنية ملونة لحفظ الخبز والضيافة العمانية.',
     price: 7.0,
     category: 'حرف وفنون يدوية',
     subCategory: 'أعمال حرفية معاصرة',
@@ -257,6 +266,7 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
+    // صورة حقيقية لسلال الخوص المنسوجة يدوياً من سعف النخيل
     image: 'https://images.unsplash.com/photo-1595408076683-5d0c0d3e425e?auto=format&fit=crop&w=800&q=80',
     stock: 15,
     featured: false,
@@ -277,7 +287,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+    // صورة زجاجة عطر شرقي فاخر بدهن العود
+    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80',
     stock: 12,
     featured: true,
   },
@@ -297,7 +308,8 @@ export const PRODUCTS_DATA: Product[] = [
     },
     sellerId: 'hudifamoosa2007',
     sellerEmail: 'hudifamoosa2007@gmail.com',
-    image: 'https://images.unsplash.com/photo-1584589167171-541ce45f1eea?auto=format&fit=crop&w=800&q=80',
+    // صورة حقيقية لصندوق خشبي تراثي مزخرف بالنحاس (مندوس)
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Omani_wooden_chest.jpg/800px-Omani_wooden_chest.jpg',
     stock: 7,
     featured: false,
   },
@@ -374,6 +386,7 @@ export const SUCCESS_STORIES_DATA: SuccessStory[] = [
       'الحصول على شهادة اعتماد من ريادة ودعم الابتكار الوطني',
       'تحقيق نمو في المبيعات بنسبة تفوق 140% خلال عام واحد',
     ],
+    // صورة حقيقية لواحة نخيل عُمانية
     image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',
     growthRate: '+140%',
   },
