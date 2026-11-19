@@ -1,529 +1,453 @@
 import React, { useState } from 'react';
 import {
-  CreditCard,
   ShieldCheck,
-  Truck,
-  CheckCircle2,
+  CreditCard,
+  MapPin,
+  User,
+  Phone,
+  ArrowLeft,
   ArrowRight,
+  CheckCircle2,
   Lock,
-  Building,
-  AlertCircle,
   ShoppingBag,
-  QrCode,
-  Printer,
-  Smartphone,
-  Check,
+  Sparkles,
+  Banknote,
 } from 'lucide-react';
-import { useCart, CreateOrderInput } from '../context/CartContext';
-import { OMAN_SHIPPING_RATES, validateOmaniPhone, GovernorateShippingRate } from '../utils/validation';
-import { WaybillModal } from '../components/WaybillModal';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { OMAN_GOVERNORATES } from '../data/mockData';
 
 interface CheckoutViewProps {
   onNavigate: (view: string) => void;
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
-  const { items, subtotal, discount, tax, placeOrder } = useCart();
+  const { cartItems, cartTotal, clearCart } = useCart();
+  const { userProfile } = useAuth();
+  const { lang, t } = useLanguage();
 
-  const [customerName, setCustomerName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [selectedGovernorate, setSelectedGovernorate] = useState<GovernorateShippingRate>(OMAN_SHIPPING_RATES[0]);
-  const [wilayat, setWilayat] = useState('');
+  const ArrowIcon = lang === 'ar' ? ArrowLeft : ArrowRight;
+
+  // خيارات الدفع المعتمدة: بوابة ثواني أو الدفع عند الاستلام
+  const [paymentMethod, setPaymentMethod] = useState<'thawani' | 'cod'>('thawani');
+
+  const [customerName, setCustomerName] = useState(userProfile?.displayName || '');
+  const [phone, setPhone] = useState(userProfile?.phone || '');
+  const [governorate, setGovernorate] = useState(userProfile?.governorate || OMAN_GOVERNORATES[0]);
   const [address, setAddress] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<
-    'apple_pay' | 'google_pay' | 'samsung_pay' | 'bank_muscat' | 'thawani' | 'omannet_qr' | 'card' | 'cod'
-  >('apple_pay');
-  const [thawaniPhone, setThawaniPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showWaybillModal, setShowWaybillModal] = useState(false);
 
-  // Dynamic shipping fee based on governorate
-  const shippingFee = items.length === 0 ? 0 : subtotal - discount >= 35 ? 0 : selectedGovernorate.rate;
-  const discountedSubtotal = Math.max(0, subtotal - discount);
-  const calculatedTax = Number((discountedSubtotal * 0.05).toFixed(3));
-  const finalTotal = Number((discountedSubtotal + shippingFee + calculatedTax).toFixed(3));
+  const deliveryFee = cartTotal >= 25 || cartTotal === 0 ? 0 : 2.0;
+  const finalTotal = cartTotal + deliveryFee;
 
-  if (items.length === 0) {
+  const handleConfirmOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (!customerName.trim() || !phone.trim() || !address.trim()) {
+      setErrorMsg(
+        t(
+          'يرجى إدخال الاسم الكامل ورقم الهاتف العُماني وعنوان التوصيل قبل المتابعة.',
+          'Please enter your full name, Omani phone number, and delivery address.'
+        )
+      );
+      return;
+    }
+
+    setIsProcessing(true);
+
+    setTimeout(() => {
+      const orderId = `MNT-${Math.floor(100000 + Math.random() * 900000)}`;
+      const isThawani = paymentMethod === 'thawani';
+
+      const newOrder = {
+        id: orderId,
+        date: new Date().toISOString(),
+        customerName: customerName.trim(),
+        phone: phone.trim(),
+        governorate,
+        address: address.trim(),
+        notes: notes.trim(),
+        paymentMethod: isThawani ? 'Thawani Pay (بوابة ثواني)' : 'الدفع عند الاستلام (COD)',
+        paymentStatus: isThawani ? 'مدفوع إلكترونياً عبر ثواني' : 'يُدفع نقداً عند الاستلام',
+        status: 'قيد التجهيز',
+        items: cartItems,
+        subtotal: cartTotal,
+        deliveryFee,
+        total: finalTotal,
+      };
+
+      try {
+        const existingOrders = JSON.parse(localStorage.getItem('montaji_orders_v1') || '[]');
+        localStorage.setItem('montaji_orders_v1', JSON.stringify([newOrder, ...existingOrders]));
+        localStorage.setItem('montaji_last_order', JSON.stringify(newOrder));
+      } catch {
+        // تجاهل أخطاء التخزين إن وجدت
+      }
+
+      clearCart();
+      setIsProcessing(false);
+      onNavigate('order-confirmation.html');
+    }, 1100);
+  };
+
+  if (cartItems.length === 0) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-          <ShoppingBag className="w-8 h-8" />
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-5">
+        <div className="w-20 h-20 rounded-3xl bg-[#153e4d]/10 text-[#153e4d] mx-auto flex items-center justify-center">
+          <ShoppingBag className="w-10 h-10 text-[#c59b5f]" />
         </div>
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">سلتك فارغة</h2>
-        <p className="text-xs text-slate-500">
-          لا توجد منتجات لإتمام عملية الشراء. يرجى إضافة منتجات من السوق أولاً.
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+          {t('سلة المشتريات فارغة حالياً', 'Your Shopping Cart is Empty')}
+        </h2>
+        <p className="text-sm text-slate-500">
+          {t(
+            'أضف منتجات عُمانية إلى سلتك أولاً لإتمام الطلب.',
+            'Add Omani products to your cart first to complete your order.'
+          )}
         </p>
         <button
+          type="button"
           onClick={() => onNavigate('marketplace.html')}
-          className="px-6 py-2.5 bg-[#153e4d] hover:bg-[#1f5b70] text-[#dfba83] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+          className="px-6 py-3 bg-[#153e4d] text-[#e9cca0] rounded-2xl font-bold text-sm hover:bg-[#1f5b70] transition cursor-pointer"
         >
-          العودة لسوق المنتجات
+          {t('العودة إلى سوق المنتجات', 'Back to Marketplace')}
         </button>
       </div>
     );
   }
 
-  const handleCompleteOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customerName.trim() || !phone.trim() || !wilayat.trim() || !address.trim()) {
-      setErrorMsg('يرجى ملء جميع الحقول الإلزامية وعنوان التوصيل.');
-      return;
-    }
-
-    // Phone validation
-    const phoneVal = validateOmaniPhone(phone);
-    if (!phoneVal.isValid) {
-      setErrorMsg(phoneVal.error || 'يرجى إدخال رقم هاتف عماني صحيح (مثال: 94842840).');
-      return;
-    }
-
-    setErrorMsg(null);
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      const orderData: CreateOrderInput = {
-        customerName: customerName.trim(),
-        email: email.trim() || `${phoneVal.formatted}@customer.montaji.om`,
-        phone: phoneVal.formatted,
-        governorate: selectedGovernorate.name,
-        wilayat: wilayat.trim(),
-        address: address.trim(),
-        paymentMethod: paymentMethod === 'omannet_qr' ? 'bank_muscat' : paymentMethod,
-      };
-
-      placeOrder(orderData);
-      setIsProcessing(false);
-      onNavigate('order-confirmation.html');
-    }, 1200);
-  };
-
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8" dir="rtl">
-      {/* Title */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-        <button
-          onClick={() => onNavigate('cart.html')}
-          className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 mb-2 cursor-pointer"
-        >
-          <ArrowRight className="w-4 h-4" />
-          <span>العودة إلى سلة التسوق</span>
-        </button>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-          إتمام الطلب والدفع الوطني المعتمد
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          بوابات دفع عمانية مرخصة (شبكة عمان OmanNet ومحفظة ثواني) وحاسبة شحن موحدة لكافة المحافظات
-        </p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      {/* رأس الصفحة */}
+      <div className="bg-gradient-to-r from-[#122e3a] via-[#153e4d] to-[#1f5b70] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-[#c59b5f]/30 flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-[#dfba83] bg-[#c59b5f]/15 px-3 py-1 rounded-full border border-[#c59b5f]/30">
+            <ShieldCheck className="w-4 h-4 text-[#c59b5f]" />
+            <span>{t('إتمام الطلب والدفع الآمن', 'Secure Checkout & Payment')}</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black">
+            {t('إتمام الطلب والدفع الوطني المعتمد', 'Checkout & Certified National Payment')}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300">
+            {t(
+              'اختر الدفع الإلكتروني عبر بوابة ثواني أو الدفع نقداً عند استلام طلبك.',
+              'Choose online payment via Thawani Pay or Cash on Delivery.'
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="bg-[#4f46e5] px-4 py-2.5 rounded-2xl border border-indigo-300/40 shadow-lg flex items-center gap-2">
+            <Lock className="w-4 h-4 text-[#dfba83]" />
+            <span className="font-black text-xs sm:text-sm">Thawani Pay</span>
+          </div>
+          <div className="bg-emerald-600/90 px-4 py-2.5 rounded-2xl border border-emerald-400/40 shadow-lg flex items-center gap-2">
+            <Banknote className="w-4 h-4 text-white" />
+            <span className="font-bold text-xs sm:text-sm">{t('عند الاستلام', 'COD')}</span>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleCompleteOrder}>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Form Columns */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Step 1: Customer & Delivery Address */}
-            <div className="bg-white dark:bg-[#0d232d] text-slate-800 dark:text-slate-100 rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#153e4d] text-[#dfba83] flex items-center justify-center text-xs font-bold">
-                    1
-                  </div>
-                  <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    بيانات العميل وعنوان التوصيل في سلطنة عمان
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowWaybillModal(true)}
-                  className="px-3 py-1.5 bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-sky-100 transition"
-                  title="معاينة بوليصة الشحن الرسمية"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>معاينة بوليصة الشحن (Waybill)</span>
-                </button>
-              </div>
+      <form onSubmit={handleConfirmOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* العمود الأيمن: بيانات التوصيل + اختيار وسيلة الدفع */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* 1. بيانات التوصيل */}
+          <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-[#c59b5f]" />
+              <span>{t('بيانات المستلم وعنوان التوصيل', 'Recipient & Delivery Details')}</span>
+            </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    الاسم بالكامل: <span className="text-rose-500">*</span>
-                  </label>
+            {errorMsg && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('الاسم الكامل *', 'Full Name *')}
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute top-3 start-3.5" />
                   <input
                     type="text"
                     required
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="مثال: حذيفة بن موسى"
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1f5b70]"
+                    placeholder={t('أدخل اسمك الكامل', 'Enter full name')}
+                    className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    رقم الهاتف العُماني (يبدأ بـ 9 أو 7): <span className="text-rose-500">*</span>
-                  </label>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('رقم الهاتف العُماني *', 'Omani Phone Number *')}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute top-3 start-3.5" />
                   <input
                     type="tel"
                     required
+                    dir="ltr"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="94842840"
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono font-bold focus:ring-2 focus:ring-[#1f5b70]"
-                    dir="ltr"
+                    placeholder="9XXXXXXX"
+                    className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm text-start focus:outline-hidden focus:border-[#1f5b70]"
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('المحافظة *', 'Governorate *')}
+                </label>
+                <select
+                  value={governorate}
+                  onChange={(e) => setGovernorate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
+                >
+                  {OMAN_GOVERNORATES.map((gov) => (
+                    <option key={gov} value={gov}>
+                      {gov}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  البريد الإلكتروني (لتلقي الفاتورة):
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('الولاية / المنطقة / رقم المنزل *', 'Wilayat / Area / House No. *')}
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@domain.om"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1f5b70] text-left font-mono"
-                  dir="ltr"
-                />
-              </div>
-
-              {/* Governorates Shipping Selector */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    المحافظة (حاسبة الشحن المخفض الموحد): <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={selectedGovernorate.id}
-                    onChange={(e) => {
-                      const found = OMAN_SHIPPING_RATES.find((r) => r.id === e.target.value);
-                      if (found) setSelectedGovernorate(found);
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1f5b70] cursor-pointer text-right font-medium"
-                  >
-                    {OMAN_SHIPPING_RATES.map((gov) => (
-                      <option key={gov.id} value={gov.id}>
-                        {gov.name} (+{gov.rate.toFixed(3)} ر.ع. • وصول خلال {gov.deliveryDays})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    الولاية / المنطقة: <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={wilayat}
-                    onChange={(e) => setWilayat(e.target.value)}
-                    placeholder="مثال: صلالة، نزوى، السيب، صحار..."
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1f5b70]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  العنوان التفصيلي / رقم المنزل / ملاحظات الناقل: <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={2}
+                  type="text"
                   required
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="الشارع، رقم المبنى، أقرب معلم مميز..."
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1f5b70]"
+                  placeholder={t('مثال: السيب - المعبيلة الجنوبية', 'e.g., Seeb - Al Maabilah')}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
                 />
               </div>
             </div>
 
-            {/* Step 2: Payment Method */}
-            <div className="bg-white dark:bg-[#0d232d] text-slate-800 dark:text-slate-100 rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="w-7 h-7 rounded-full bg-[#1f5b70] text-white flex items-center justify-center text-xs font-bold">
-                  2
-                </div>
-                <h2 className="text-base font-black text-slate-900 dark:text-white">
-                  طرق الدفع الإلكتروني الوطنية السريعة
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. Thawani Pay */}
-                <label
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
-                    paymentMethod === 'thawani'
-                      ? 'border-[#1f5b70] bg-[#1f5b70]/5 dark:bg-slate-800'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'thawani'}
-                    onChange={() => setPaymentMethod('thawani')}
-                    className="mt-1 text-[#1f5b70] focus:ring-[#1f5b70]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <span className="font-black">محفظة ثواني Thawani Pay</span>
-                        <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded font-bold">
-                          عُمان
-                        </span>
-                      </span>
-                      <span className="text-[10px] text-emerald-600 font-bold">فوري</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      الدفع المباشر عبر محفظة ثواني الذكية برقم الهاتف العماني
-                    </p>
-                  </div>
-                </label>
-
-                {/* 2. OmanNet QR Code */}
-                <label
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
-                    paymentMethod === 'omannet_qr'
-                      ? 'border-[#1f5b70] bg-[#1f5b70]/5 dark:bg-slate-800'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'omannet_qr'}
-                    onChange={() => setPaymentMethod('omannet_qr')}
-                    className="mt-1 text-[#1f5b70] focus:ring-[#1f5b70]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <span className="font-black">رمز QR المباشر (للبوثات والمعارض)</span>
-                        <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
-                          OmanNet QR
-                        </span>
-                      </span>
-                      <span className="text-[10px] text-[#c59b5f] font-bold">مسح فوري</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      امسح الرمز عبر تطبيق بنكك (مسقط، ظفار، صحار، الوطني) واستلم فوراً في المعرض
-                    </p>
-                  </div>
-                </label>
-
-                {/* 3. Bank Muscat / OmanNet Direct Debit */}
-                <label
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
-                    paymentMethod === 'bank_muscat'
-                      ? 'border-[#1f5b70] bg-[#1f5b70]/5 dark:bg-slate-800'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'bank_muscat'}
-                    onChange={() => setPaymentMethod('bank_muscat')}
-                    className="mt-1 text-[#1f5b70] focus:ring-[#1f5b70]"
-                  />
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <span>شبكة عُمان للخصم المباشر (OmanNet)</span>
-                      <span className="text-[10px] bg-[#c59b5f]/20 text-[#845d25] px-1.5 py-0.2 rounded font-bold">
-                        بطاقات بنوك عمان
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      خصم مباشر وآمن عبر بطاقتك البنكية الصادرة من أي بنك في السلطنة
-                    </p>
-                  </div>
-                </label>
-
-                {/* 4. Apple Pay */}
-                <label
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
-                    paymentMethod === 'apple_pay'
-                      ? 'border-[#1f5b70] bg-[#1f5b70]/5 dark:bg-slate-800'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'apple_pay'}
-                    onChange={() => setPaymentMethod('apple_pay')}
-                    className="mt-1 text-[#1f5b70] focus:ring-[#1f5b70]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <span className="font-black">Apple Pay</span>
-                        <span className="text-[10px] bg-black text-white px-1.5 py-0.5 rounded font-sans">
-                          Pay
-                        </span>
-                      </span>
-                      <span className="text-[10px] text-[#c59b5f] font-bold">نقرة واحدة</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      دفع سريع وفوري عبر بصمة الوجه أو الإصبع (iPhone / Mac / iPad)
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              {/* OmanNet QR Code Display Container for Booths & Exhibitions */}
-              {paymentMethod === 'omannet_qr' && (
-                <div className="p-5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-amber-300 dark:border-amber-700/60 text-center space-y-3 animate-in fade-in">
-                  <div className="inline-flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 px-3 py-1 rounded-full text-xs font-bold">
-                    <QrCode className="w-4 h-4 text-[#c59b5f]" />
-                    <span>رمز الاستجابة السريع لمعارض الأسر ورواد الأعمال (OmanNet QR)</span>
-                  </div>
-                  <div className="w-44 h-44 bg-white p-3 rounded-2xl border-2 border-slate-900 mx-auto shadow-md flex flex-col items-center justify-center">
-                    <div className="font-mono text-[9px] text-slate-400 mb-1">OMAN-NET-QR-BOOTH</div>
-                    <div className="w-28 h-28 bg-slate-900 rounded-lg flex items-center justify-center text-white text-xs font-mono font-black tracking-widest p-2 text-center">
-                      [QR-PAY]
-                      <br />
-                      {finalTotal.toFixed(3)} ر.ع.
-                    </div>
-                    <div className="text-[10px] font-bold text-slate-800 mt-1">امسح للدفع بالهاتف</div>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mx-auto">
-                    افتح تطبيق بنكك (بنك مسقط، بنك ظفار، صحار الدولي، أو بنك عُمان الوطني)، اختر <strong>Scan QR</strong> وادفع فوراً للمشروع.
-                  </p>
-                </div>
-              )}
-
-              {/* Thawani Phone Input */}
-              {paymentMethod === 'thawani' && (
-                <div className="p-4 bg-indigo-50/60 dark:bg-slate-800 rounded-2xl border border-indigo-200 dark:border-indigo-800 space-y-2 text-xs">
-                  <div className="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-indigo-600" />
-                    <span>رقم الهاتف المرتبط بمحفظة ثواني:</span>
-                  </div>
-                  <input
-                    type="tel"
-                    value={thawaniPhone || phone}
-                    onChange={(e) => setThawaniPhone(e.target.value)}
-                    placeholder="9XXXXXXX"
-                    className="w-full bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-600 rounded-xl px-3 py-2 text-xs font-mono font-bold"
-                    dir="ltr"
-                  />
-                  <p className="text-[11px] text-indigo-800 dark:text-indigo-300">
-                    ستصلك رسالة دفع فورية على تطبيق ثواني لتأكيد المبلغ ({finalTotal.toFixed(3)} ر.ع.).
-                  </p>
-                </div>
-              )}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t('ملاحظات إضافية للتوصيل (اختياري)', 'Delivery Notes (Optional)')}
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t('أي تعليمات لمندوب التوصيل...', 'Any instructions for courier...')}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
+              />
             </div>
           </div>
 
-          {/* Sidebar: Order Summary */}
-          <div className="lg:col-span-4 bg-white dark:bg-[#0d232d] text-slate-800 dark:text-slate-100 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-md space-y-5">
-            <h3 className="font-black text-slate-900 dark:text-white text-base border-b border-slate-100 dark:border-slate-800 pb-3">
-              المنتجات في طلبك ({items.length})
-            </h3>
+          {/* 2. اختيار وسيلة الدفع: بوابة ثواني أو الدفع عند الاستلام */}
+          <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-[#4f46e5]" />
+              <span>{t('اختر وسيلة الدفع', 'Select Payment Method')}</span>
+            </h2>
 
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex items-center gap-3 text-xs">
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="w-12 h-12 rounded-lg object-cover shrink-0 border border-slate-100 dark:border-slate-700"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-slate-800 dark:text-white line-clamp-1">
-                      {product.title}
+            <div className="space-y-3">
+              {/* الخيار الأول: بوابة ثواني */}
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('thawani')}
+                className={`w-full p-4 rounded-2xl border-2 text-start transition-all flex items-center justify-between gap-4 cursor-pointer ${
+                  paymentMethod === 'thawani'
+                    ? 'border-[#4f46e5] bg-[#4f46e5]/5 dark:bg-[#4f46e5]/15'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-[#4f46e5] text-white font-black flex flex-col items-center justify-center shadow-sm shrink-0">
+                    <span className="text-[11px] leading-none">Thawani</span>
+                    <span className="text-[10px] text-indigo-200 mt-0.5">ثواني</span>
+                  </div>
+                  <div>
+                    <div className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>{t('الدفع الإلكتروني عبر بوابة ثواني (Thawani Pay)', 'Pay Online via Thawani Pay')}</span>
+                      {paymentMethod === 'thawani' && (
+                        <CheckCircle2 className="w-4 h-4 text-[#4f46e5] shrink-0" />
+                      )}
                     </div>
-                    <div className="text-slate-400">
-                      الكمية: {quantity} × {product.price.toFixed(3)} ر.ع.
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {t(
+                        'دفع آمن ومباشر بالبطاقات البنكية العُمانية والدولية عبر بوابة ثواني.',
+                        'Secure card payment via CBO-licensed Thawani gateway.'
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'thawani'}
+                  onChange={() => setPaymentMethod('thawani')}
+                  className="w-5 h-5 accent-[#4f46e5] shrink-0"
+                />
+              </button>
+
+              {/* الخيار الثاني: الدفع عند الاستلام */}
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('cod')}
+                className={`w-full p-4 rounded-2xl border-2 text-start transition-all flex items-center justify-between gap-4 cursor-pointer ${
+                  paymentMethod === 'cod'
+                    ? 'border-emerald-600 bg-emerald-500/5 dark:bg-emerald-500/15'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center shadow-sm shrink-0">
+                    <Banknote className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>{t('الدفع نقداً عند الاستلام (Cash on Delivery)', 'Cash on Delivery (COD)')}</span>
+                      {paymentMethod === 'cod' && (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {t(
+                        'ادفع قيمة الطلب نقداً بالريال العُماني لمندوب التوصيل عند استلام طلبك.',
+                        'Pay in cash (OMR) to the delivery courier upon receiving your order.'
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'cod'}
+                  onChange={() => setPaymentMethod('cod')}
+                  className="w-5 h-5 accent-emerald-600 shrink-0"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* العمود الأيسر: ملخص الطلب */}
+        <div className="lg:col-span-5">
+          <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-lg space-y-5 sticky top-24">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
+              {t('ملخص الطلب', 'Order Summary')}
+            </h2>
+
+            <div className="space-y-3 max-h-60 overflow-y-auto pe-1">
+              {cartItems.map((item) => (
+                <div
+                  key={item.product.id}
+                  className="flex items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800/70 pb-2.5"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <img
+                      src={item.product.image}
+                      alt={item.product.title}
+                      className="w-11 h-11 rounded-xl object-cover shrink-0 bg-slate-100"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-bold text-slate-900 dark:text-white truncate">
+                        {item.product.title}
+                      </div>
+                      <div className="text-slate-500">
+                        {t('الكمية:', 'Qty:')} {item.quantity} × {item.product.price.toFixed(3)} {t('ر.ع.', 'OMR')}
+                      </div>
                     </div>
                   </div>
-                  <div className="font-bold text-slate-900 dark:text-slate-100 text-left shrink-0">
-                    {(product.price * quantity).toFixed(3)} ر.ع.
+                  <div className="font-black text-slate-900 dark:text-white shrink-0">
+                    {(item.product.price * item.quantity).toFixed(3)} {t('ر.ع.', 'OMR')}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Calculations breakdown */}
-            <div className="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex justify-between">
-                <span>المجموع الفرعي:</span>
-                <span className="font-bold text-slate-900 dark:text-white">{subtotal.toFixed(3)} ر.ع.</span>
-              </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>الخصم المطبق:</span>
-                  <span>- {discount.toFixed(3)} ر.ع.</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span>شحن {selectedGovernorate.name}:</span>
-                <span className="font-bold text-[#008450]">
-                  {shippingFee === 0 ? 'مجاني' : `${shippingFee.toFixed(3)} ر.ع.`}
+            <div className="space-y-2 text-sm pt-2">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>{t('المجموع الفرعي', 'Subtotal')}</span>
+                <span className="font-bold">
+                  {cartTotal.toFixed(3)} {t('ر.ع.', 'OMR')}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span>ضريبة القيمة المضافة (5%):</span>
-                <span>{calculatedTax.toFixed(3)} ر.ع.</span>
+
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>{t('رسوم التوصيل', 'Delivery Fee')}</span>
+                <span className="font-bold text-emerald-600">
+                  {deliveryFee === 0
+                    ? t('مجاني (للطلبات فوق 25 ر.ع.)', 'Free (Orders over 25 OMR)')
+                    : `${deliveryFee.toFixed(3)} ${t('ر.ع.', 'OMR')}`}
+                </span>
               </div>
 
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-baseline">
-                <span className="font-black text-slate-900 dark:text-white text-sm">المبلغ الإجمالي النهائي:</span>
-                <div className="text-right">
-                  <span className="text-xl font-black text-[#008450] dark:text-emerald-400">{finalTotal.toFixed(3)}</span>{' '}
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">ر.ع.</span>
-                </div>
+              <div className="flex justify-between text-base font-black text-slate-900 dark:text-white pt-3 border-t border-slate-200 dark:border-slate-700">
+                <span>{t('الإجمالي المستحق', 'Total Amount Due')}</span>
+                <span className="text-[#153e4d] dark:text-[#dfba83] text-xl">
+                  {finalTotal.toFixed(3)} {t('ر.ع.', 'OMR')}
+                </span>
               </div>
             </div>
 
-            {/* Error Message */}
-            {errorMsg && (
-              <div className="p-3 bg-rose-50 text-rose-800 text-xs rounded-xl border border-rose-200 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
-            {/* Action button */}
             <button
               type="submit"
               disabled={isProcessing}
-              className="w-full py-3.5 bg-gradient-to-r from-[#153e4d] to-[#1f5b70] hover:from-[#122e3a] hover:to-[#153e4d] text-[#dfba83] font-black rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className={`w-full py-4 px-6 rounded-2xl disabled:opacity-60 text-white font-black text-sm sm:text-base shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                paymentMethod === 'thawani'
+                  ? 'bg-[#4f46e5] hover:bg-[#4338ca] shadow-indigo-500/25'
+                  : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25'
+              }`}
             >
               {isProcessing ? (
-                <span>جاري معالجة الدفع والطلب...</span>
+                <>
+                  <Sparkles className="w-5 h-5 animate-spin" />
+                  <span>
+                    {paymentMethod === 'thawani'
+                      ? t('جاري التحويل إلى بوابة ثواني...', 'Redirecting to Thawani Pay...')
+                      : t('جاري تأكيد الطلب...', 'Confirming Order...')}
+                  </span>
+                </>
               ) : (
                 <>
-                  <Lock className="w-4 h-4" />
-                  <span>تأكيد الطلب والدفع الفوري ({finalTotal.toFixed(3)} ر.ع.)</span>
+                  {paymentMethod === 'thawani' ? (
+                    <Lock className="w-4 h-4 text-[#dfba83]" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-white" />
+                  )}
+                  <span>
+                    {paymentMethod === 'thawani'
+                      ? t('المتابعة للدفع عبر بوابة ثواني', 'Proceed to Pay with Thawani')
+                      : t('تأكيد الطلب (الدفع عند الاستلام)', 'Confirm Order (Cash on Delivery)')}
+                  </span>
+                  <ArrowIcon className="w-4 h-4" />
                 </>
               )}
             </button>
 
-            <div className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>معاملتك محمية وفق معايير البنك المركزي العماني</span>
+            <div className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>
+                {paymentMethod === 'thawani'
+                  ? t('معاملة محمية ومشفرة بالكامل عبر ثواني', '100% Protected & Encrypted via Thawani')
+                  : t('توصيل مضمون لجميع محافظات سلطنة عُمان', 'Guaranteed delivery across all Oman Governorates')}
+              </span>
             </div>
           </div>
         </div>
       </form>
-
-      {/* Waybill Modal */}
-      <WaybillModal
-        isOpen={showWaybillModal}
-        onClose={() => setShowWaybillModal(false)}
-        governorate={selectedGovernorate}
-        customerName={customerName}
-        phone={phone}
-        wilayat={wilayat}
-        address={address}
-        totalOmr={finalTotal}
-      />
     </div>
   );
 };
