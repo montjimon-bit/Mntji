@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   ExternalLink,
   MailCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
@@ -14,21 +15,25 @@ interface OrderConfirmationViewProps {
   onNavigate: (view: string) => void;
 }
 
-const SECONDARY_EMAIL = 'montjimon@gmail.com';
+const MERCHANT_EMAIL = 'montjimon@gmail.com';
 const MERCHANT_WHATSAPP = '96894842840';
 
 export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ onNavigate }) => {
   const { lastOrder, orders } = useCart();
-  const [emailSentToast, setEmailSentToast] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const currentOrder = lastOrder || (orders.length > 0 ? orders[0] : null);
 
-  // إرسال بريد إلكتروني تلقائي للأدمن وصاحب المنتجات فور إتمام الطلب
-  useEffect(() => {
+  const sendMerchantEmail = async (force = false) => {
     if (!currentOrder) return;
 
-    const sentKey = `montaji_notified_${currentOrder.orderNumber}`;
-    if (sessionStorage.getItem(sentKey)) return;
+    const sentKey = `montaji_email_ok_${currentOrder.orderNumber}`;
+    if (!force && sessionStorage.getItem(sentKey)) {
+      setEmailStatus('sent');
+      return;
+    }
+
+    setEmailStatus('sending');
 
     const itemsSummary = currentOrder.items
       .map(
@@ -44,44 +49,58 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
         ? 'بوابة ثواني الإلكترونية (Thawani Pay)'
         : 'الدفع عند الاستلام (COD)';
 
-    const sendMerchantEmail = async () => {
-      try {
-        const res = await fetch(`https://formsubmit.co/ajax/${ADMIN_MERCHANT_EMAIL}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            _subject: `طلبية جديدة في منصة مُنتَجي (${currentOrder.orderNumber}) — يرجى التأكيد`,
-            _cc: SECONDARY_EMAIL,
-            _template: 'box',
-            _captcha: 'false',
-            'رقم الطلبية': currentOrder.orderNumber,
-            'اسم العميل': currentOrder.customerName,
-            'رقم هاتف العميل': currentOrder.phone,
-            'إيميل العميل': currentOrder.email || 'غير متوفر',
-            'العنوان': `${currentOrder.governorate} - ${currentOrder.wilayat} - ${currentOrder.address}`,
-            'وسيلة الدفع': paymentLabel,
-            'المنتجات المطلوبة': itemsSummary,
-            'الإجمالي المستحق': `${currentOrder.total.toFixed(3)} ر.ع.`,
-            'ملاحظة هامة للتاجر':
-              'يرجى الدخول إلى قسم (متجري الخاص) في منصة مُنتَجي والضغط على زر تأكيد الطلبية لتجهيزها.',
-          }),
-        });
+    const fullDetailsMessage =
+      `لديك طلبية جديدة في منصة مُنتَجي 🇴🇲\n\n` +
+      `• رقم الطلبية: ${currentOrder.orderNumber}\n` +
+      `• اسم العميل: ${currentOrder.customerName}\n` +
+      `• رقم هاتف العميل: ${currentOrder.phone}\n` +
+      `• إيميل العميل: ${currentOrder.email || 'غير متوفر'}\n` +
+      `• العنوان: ${currentOrder.governorate} - ${currentOrder.wilayat} - ${currentOrder.address}\n` +
+      `• وسيلة الدفع: ${paymentLabel}\n` +
+      `• الإجمالي المستحق: ${currentOrder.total.toFixed(3)} ر.ع.\n\n` +
+      `المنتجات المطلوبة:\n${itemsSummary}\n\n` +
+      `يرجى الدخول إلى (متجري الخاص) في الموقع والضغط على زر تأكيد الطلبية.`;
 
-        if (res.ok) {
-          sessionStorage.setItem(sentKey, 'true');
-          setEmailSentToast(true);
-          setTimeout(() => setEmailSentToast(false), 4500);
-        }
-      } catch (err) {
-        console.warn('تعذر إرسال إشعار البريد للتاجر:', err);
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${MERCHANT_EMAIL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `طلبية جديدة في منصة منتجي - ${currentOrder.orderNumber}`,
+          _template: 'table',
+          _captcha: 'false',
+          name: currentOrder.customerName,
+          email: currentOrder.email || 'customer@montaji.om',
+          phone: currentOrder.phone,
+          order_number: currentOrder.orderNumber,
+          total_omr: `${currentOrder.total.toFixed(3)} OMR`,
+          details: fullDetailsMessage,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && (data.success === 'true' || data.success === true)) {
+        sessionStorage.setItem(sentKey, 'true');
+        setEmailStatus('sent');
+      } else {
+        console.error('FormSubmit response:', data);
+        setEmailStatus('error');
       }
-    };
+    } catch (err) {
+      console.error('Email fetch error:', err);
+      setEmailStatus('error');
+    }
+  };
 
-    sendMerchantEmail();
-  }, [currentOrder]);
+  useEffect(() => {
+    if (currentOrder) {
+      sendMerchantEmail(false);
+    }
+  }, [currentOrder?.orderNumber]);
 
   if (!currentOrder) {
     return (
@@ -125,13 +144,6 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      {emailSentToast && (
-        <div className="fixed bottom-24 end-6 z-50 bg-[#153e4d] text-[#e9cca0] border border-[#c59b5f]/50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs sm:text-sm font-bold animate-in slide-in-from-bottom-5">
-          <MailCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span>تم إرسال تفاصيل الطلبية تلقائياً إلى بريد التاجر لتأكيدها!</span>
-        </div>
-      )}
-
       {/* Success Hero */}
       <div className="bg-gradient-to-br from-emerald-900 to-teal-950 rounded-3xl p-8 sm:p-10 text-white text-center space-y-4 shadow-xl relative overflow-hidden">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 flex items-center justify-center mx-auto animate-bounce">
@@ -141,12 +153,32 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
           شكراً لك! تم استلام طلبك بنجاح
         </h1>
         <p className="text-sm text-emerald-100 max-w-lg mx-auto">
-          تم إرسال إشعار فوري لبريد التاجر وظهرت الطلبية في لوحة المتجر لتأكيدها وتجهيزها لك.
+          تم تسجيل طلبيتك في لوحة متجر التاجر لتأكيدها وتجهيزها وتوصيلها لك بعناية.
         </p>
-        <div className="pt-2">
+
+        {/* حالة إشعار البريد للتاجر */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
           <span className="inline-block bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider">
             رقم الطلب: {currentOrder.orderNumber}
           </span>
+
+          {emailStatus === 'sent' && (
+            <span className="inline-flex items-center gap-1.5 bg-emerald-500/25 border border-emerald-400/40 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-200">
+              <MailCheck className="w-3.5 h-3.5" />
+              <span>تم إشعار بريد التاجر ✓</span>
+            </span>
+          )}
+
+          {emailStatus === 'error' && (
+            <button
+              type="button"
+              onClick={() => sendMerchantEmail(true)}
+              className="inline-flex items-center gap-1.5 bg-amber-500/25 hover:bg-amber-500/40 border border-amber-300/40 px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-200 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>إعادة إرسال إشعار البريد</span>
+            </button>
+          )}
         </div>
       </div>
 
