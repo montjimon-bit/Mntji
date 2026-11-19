@@ -1,14 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2,
-  Package,
   Truck,
   MapPin,
-  Calendar,
   Printer,
-  ArrowLeft,
   ShoppingBag,
   ExternalLink,
+  MailCheck,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
@@ -16,11 +14,71 @@ interface OrderConfirmationViewProps {
   onNavigate: (view: string) => void;
 }
 
+const MERCHANT_EMAIL = 'montjimon@gmail.com';
+const MERCHANT_WHATSAPP = '96894842840';
+
 export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ onNavigate }) => {
   const { lastOrder, orders } = useCart();
+  const [emailSentToast, setEmailSentToast] = useState(false);
 
-  // If no lastOrder in context, use the most recent order from orders list
   const currentOrder = lastOrder || (orders.length > 0 ? orders[0] : null);
+
+  // إرسال بريد إلكتروني تلقائي للتاجر فور تأكيد الطلب (مرة واحدة فقط لكل طلبية)
+  useEffect(() => {
+    if (!currentOrder) return;
+
+    const sentKey = `montaji_notified_${currentOrder.orderNumber}`;
+    if (sessionStorage.getItem(sentKey)) return;
+
+    const itemsSummary = currentOrder.items
+      .map(
+        (item, index) =>
+          `${index + 1}. ${item.title} | الكمية: ${item.quantity} | السعر: ${(
+            item.price * item.quantity
+          ).toFixed(3)} ر.ع.`
+      )
+      .join('\n');
+
+    const paymentLabel =
+      currentOrder.paymentMethod === 'thawani'
+        ? 'بوابة ثواني الإلكترونية (Thawani Pay)'
+        : 'الدفع عند الاستلام (COD)';
+
+    const sendMerchantEmail = async () => {
+      try {
+        await fetch(`https://formsubmit.co/ajax/${MERCHANT_EMAIL}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            _subject: `طلبية جديدة في منصة مُنتَجي (${currentOrder.orderNumber}) — يرجى التأكيد`,
+            _template: 'box',
+            _captcha: 'false',
+            'رقم الطلبية': currentOrder.orderNumber,
+            'اسم العميل': currentOrder.customerName,
+            'رقم هاتف العميل': currentOrder.phone,
+            'إيميل العميل': currentOrder.email || 'غير متوفر',
+            'العنوان': `${currentOrder.governorate} - ${currentOrder.wilayat} - ${currentOrder.address}`,
+            'وسيلة الدفع': paymentLabel,
+            'المنتجات المطلوبة': itemsSummary,
+            'الإجمالي المستحق': `${currentOrder.total.toFixed(3)} ر.ع.`,
+            'ملاحظة هامة للتاجر':
+              'يرجى الدخول إلى قسم (متجري الخاص) في منصة مُنتَجي والضغط على زر تأكيد الطلبية لتجهيزها.',
+          }),
+        });
+
+        sessionStorage.setItem(sentKey, 'true');
+        setEmailSentToast(true);
+        setTimeout(() => setEmailSentToast(false), 4000);
+      } catch (err) {
+        console.warn('تعذر إرسال إشعار البريد للتاجر:', err);
+      }
+    };
+
+    sendMerchantEmail();
+  }, [currentOrder]);
 
   if (!currentOrder) {
     return (
@@ -31,7 +89,7 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
         </p>
         <button
           onClick={() => onNavigate('marketplace.html')}
-          className="px-5 py-2.5 bg-[#008450] text-white rounded-xl text-xs font-bold"
+          className="px-5 py-2.5 bg-[#008450] text-white rounded-xl text-xs font-bold cursor-pointer"
         >
           تصفح سوق المنتجات
         </button>
@@ -43,8 +101,34 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
     window.print();
   };
 
+  const whatsappItemsText = currentOrder.items
+    .map((item) => `• ${item.title} (${item.quantity} × ${item.price.toFixed(3)} ر.ع.)`)
+    .join('\n');
+
+  const whatsappMessage =
+    `مرحباً! لديك طلبية جديدة عبر منصة مُنتَجي 🇴🇲\n` +
+    `━━━━━━━━━━━━━━\n` +
+    `📦 رقم الطلبية: ${currentOrder.orderNumber}\n` +
+    `👤 اسم العميل: ${currentOrder.customerName}\n` +
+    `📱 رقم العميل: ${currentOrder.phone}\n` +
+    `📧 إيميل العميل: ${currentOrder.email || 'غير محدد'}\n` +
+    `📍 العنوان: ${currentOrder.governorate} - ${currentOrder.wilayat} (${currentOrder.address})\n` +
+    `💳 الدفع: ${currentOrder.paymentMethod === 'thawani' ? 'بوابة ثواني' : 'الدفع عند الاستلام'}\n` +
+    `━━━━━━━━━━━━━━\n` +
+    `🛍️ الطلبية:\n${whatsappItemsText}\n` +
+    `━━━━━━━━━━━━━━\n` +
+    `💰 الإجمالي: ${currentOrder.total.toFixed(3)} ر.ع.\n` +
+    `يرجى الدخول إلى (متجري الخاص) في الموقع لتأكيد الطلبية.`;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      {emailSentToast && (
+        <div className="fixed bottom-24 end-6 z-50 bg-[#153e4d] text-[#e9cca0] border border-[#c59b5f]/50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs sm:text-sm font-bold animate-in slide-in-from-bottom-5">
+          <MailCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span>تم إرسال تفاصيل الطلبية تلقائياً إلى بريد التاجر لتأكيدها!</span>
+        </div>
+      )}
+
       {/* Success Hero */}
       <div className="bg-gradient-to-br from-emerald-900 to-teal-950 rounded-3xl p-8 sm:p-10 text-white text-center space-y-4 shadow-xl relative overflow-hidden">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 flex items-center justify-center mx-auto animate-bounce">
@@ -54,7 +138,7 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
           شكراً لك! تم استلام طلبك بنجاح
         </h1>
         <p className="text-sm text-emerald-100 max-w-lg mx-auto">
-          تم تأكيد طلبيتك وإرسال إشعار فوري لرواد الأعمال وأصحاب المتاجر لتجهيز طلبك وتوصيله بعناية.
+          تم إرسال إشعار فوري لبريد التاجر وظهرت الطلبية في لوحة المتجر لتأكيدها وتجهيزها لك.
         </p>
         <div className="pt-2">
           <span className="inline-block bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider">
@@ -68,11 +152,9 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
         <h2 className="text-sm font-bold text-slate-700">مراحل الشحن والتجهيز المباشر:</h2>
 
         <div className="grid grid-cols-4 gap-2 text-center text-xs relative">
-          {/* Progress bar background */}
           <div className="absolute top-4 right-1/8 left-1/8 h-1 bg-slate-100 -z-0" />
           <div className="absolute top-4 right-1/8 w-1/4 h-1 bg-[#008450] -z-0" />
 
-          {/* Steps */}
           <div className="space-y-2 relative z-10 flex flex-col items-center">
             <div className="w-8 h-8 rounded-full bg-[#008450] text-white flex items-center justify-center font-bold text-xs shadow-xs">
               ✓
@@ -136,11 +218,16 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
           <div className="space-y-1.5">
             <div className="font-bold text-slate-800 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#008450]" />
-              <span>عنوان التوصيل:</span>
+              <span>بيانات العميل وعنوان التوصيل:</span>
             </div>
-            <div className="text-slate-600 pr-5">
-              {currentOrder.customerName} - {currentOrder.phone}
+            <div className="text-slate-600 pr-5 font-semibold">
+              {currentOrder.customerName} — <span dir="ltr">{currentOrder.phone}</span>
             </div>
+            {currentOrder.email && (
+              <div className="text-slate-500 pr-5" dir="ltr">
+                {currentOrder.email}
+              </div>
+            )}
             <div className="text-slate-600 pr-5">
               {currentOrder.governorate}، {currentOrder.wilayat}
             </div>
@@ -155,12 +242,8 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
             <div className="text-slate-600 pr-5">
               طريقة الدفع:{' '}
               <span className="font-bold text-slate-800">
-                {currentOrder.paymentMethod === 'bank_muscat'
-                  ? 'بطاقة بنك مسقط / عُمان نت'
-                  : currentOrder.paymentMethod === 'thawani'
-                  ? 'محفظة ثواني الإلكترونية'
-                  : currentOrder.paymentMethod === 'card'
-                  ? 'بطاقة ائتمانية'
+                {currentOrder.paymentMethod === 'thawani'
+                  ? 'بوابة ثواني الإلكترونية (Thawani Pay)'
                   : 'الدفع عند الاستلام'}
               </span>
             </div>
@@ -237,18 +320,12 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
               عرض سجل طلباتي بالكامل
             </button>
             <a
-              href={`https://wa.me/96894842840?text=${encodeURIComponent(
-                `مرحباً! تم تسجيل طلب جديد رقم ${currentOrder.orderNumber} عبر منصة مُنتجي:\n` +
-                `المستلم: ${currentOrder.customerName}\n` +
-                `المحافظة: ${currentOrder.governorate} - ${currentOrder.wilayat}\n` +
-                `المبلغ: ${currentOrder.total.toFixed(3)} ر.ع.\n` +
-                `يرجى التجهيز للشحن.`
-              )}`}
+              href={`https://wa.me/${MERCHANT_WHATSAPP}?text=${encodeURIComponent(whatsappMessage)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <span>إشعار WhatsApp فوري للتاجر</span>
+              <span>إرسال تفاصيل الطلبية عبر WhatsApp للتاجر</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
