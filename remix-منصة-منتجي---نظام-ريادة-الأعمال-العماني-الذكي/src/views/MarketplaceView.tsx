@@ -23,7 +23,6 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ProductReviewsSection } from '../components/ProductReviewsSection';
-import { ProductShareModal } from '../components/ProductShareModal';
 
 interface MarketplaceViewProps {
   onNavigate: (view: string) => void;
@@ -44,7 +43,6 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
   const [onlyRiyada, setOnlyRiyada] = useState(false);
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [sharingProduct, setSharingProduct] = useState<Product | null>(null);
   const [detailQuantity, setDetailQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState<string | null>(null);
   const [ratingsMap, setRatingsMap] = useState<Record<string, { avg: number; count: number }>>({});
@@ -67,6 +65,35 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
     setActiveSellerStore(sellerName);
     setSelectedProduct(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // مشاركة مباشرة بدون فتح شاشة الهولوجرام
+  const handleDirectShareProduct = async (product: Product, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/#marketplace.html?product=${product.id}`;
+    const shareText = `${product.title} — ${product.price.toFixed(3)} ${t('ر.ع.', 'OMR')}\n${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: product.description,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // في حال ألغى المستخدم نافذة المشاركة في النظام، ننسخ الرابط كخيار بديل
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setAddedToast(t(`تم نسخ رابط "${product.title}" للمشاركة!`, `Copied link for "${product.title}"!`));
+      setTimeout(() => setAddedToast(null), 2500);
+    } catch {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleDeleteProduct = async (product: Product, e?: React.MouseEvent) => {
@@ -474,10 +501,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
 
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSharingProduct(product);
-                        }}
+                        onClick={(e) => handleDirectShareProduct(product, e)}
                         className="p-2 rounded-xl backdrop-blur-md bg-white/80 hover:bg-white text-slate-600 hover:text-[#1f5b70] transition-all shadow-md cursor-pointer"
                         title={t('مشاركة المنتج', 'Share product')}
                       >
@@ -685,8 +709,9 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setSharingProduct(selectedProduct)}
+                      onClick={(e) => handleDirectShareProduct(selectedProduct, e)}
                       className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                      title={t('مشاركة المنتج', 'Share product')}
                     >
                       <Share2 className="w-4 h-4 text-[#c59b5f]" />
                     </button>
@@ -730,13 +755,6 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
             />
           </div>
         </div>
-      )}
-
-      {sharingProduct && (
-        <ProductShareModal
-          product={sharingProduct}
-          onClose={() => setSharingProduct(null)}
-        />
       )}
     </div>
   );
