@@ -44,3 +44,6 @@ html.dark ::-webkit-scrollbar-track {
 ::-webkit-scrollbar-thumb:hover {
   background: #1f5b70;
 }
+html {
+  scroll-behavior: smooth;
+}
