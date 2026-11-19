@@ -14,7 +14,8 @@ interface OrderConfirmationViewProps {
   onNavigate: (view: string) => void;
 }
 
-const MERCHANT_EMAIL = 'montjimon@gmail.com';
+const ADMIN_MERCHANT_EMAIL = 'hudifamoosa2007@gmail.com';
+const SECONDARY_EMAIL = 'montjimon@gmail.com';
 const MERCHANT_WHATSAPP = '96894842840';
 
 export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ onNavigate }) => {
@@ -23,7 +24,7 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
 
   const currentOrder = lastOrder || (orders.length > 0 ? orders[0] : null);
 
-  // إرسال بريد إلكتروني تلقائي للتاجر فور تأكيد الطلب (مرة واحدة فقط لكل طلبية)
+  // إرسال بريد إلكتروني تلقائي للأدمن وصاحب المنتجات فور إتمام الطلب
   useEffect(() => {
     if (!currentOrder) return;
 
@@ -46,7 +47,7 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
 
     const sendMerchantEmail = async () => {
       try {
-        await fetch(`https://formsubmit.co/ajax/${MERCHANT_EMAIL}`, {
+        const res = await fetch(`https://formsubmit.co/ajax/${ADMIN_MERCHANT_EMAIL}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -54,6 +55,7 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
           },
           body: JSON.stringify({
             _subject: `طلبية جديدة في منصة مُنتَجي (${currentOrder.orderNumber}) — يرجى التأكيد`,
+            _cc: SECONDARY_EMAIL,
             _template: 'box',
             _captcha: 'false',
             'رقم الطلبية': currentOrder.orderNumber,
@@ -69,9 +71,11 @@ export const OrderConfirmationView: React.FC<OrderConfirmationViewProps> = ({ on
           }),
         });
 
-        sessionStorage.setItem(sentKey, 'true');
-        setEmailSentToast(true);
-        setTimeout(() => setEmailSentToast(false), 4000);
+        if (res.ok) {
+          sessionStorage.setItem(sentKey, 'true');
+          setEmailSentToast(true);
+          setTimeout(() => setEmailSentToast(false), 4500);
+        }
       } catch (err) {
         console.warn('تعذر إرسال إشعار البريد للتاجر:', err);
       }
