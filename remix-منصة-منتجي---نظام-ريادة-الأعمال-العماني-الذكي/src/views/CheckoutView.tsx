@@ -5,6 +5,7 @@ import {
   MapPin,
   User,
   Phone,
+  Mail,
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
@@ -23,8 +24,17 @@ interface CheckoutViewProps {
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
-  const { cartItems, cartTotal, clearCart } = useCart();
-  const { userProfile } = useAuth();
+  const {
+    items,
+    subtotal,
+    discount,
+    shippingFee,
+    tax,
+    total,
+    couponCode,
+    placeOrder,
+  } = useCart();
+  const { user, userProfile } = useAuth();
   const { lang, t } = useLanguage();
 
   const ArrowIcon = lang === 'ar' ? ArrowLeft : ArrowRight;
@@ -32,26 +42,24 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
   // خيارات الدفع المعتمدة: بوابة ثواني أو الدفع عند الاستلام
   const [paymentMethod, setPaymentMethod] = useState<'thawani' | 'cod'>('thawani');
 
-  const [customerName, setCustomerName] = useState(userProfile?.displayName || '');
+  const [customerName, setCustomerName] = useState(userProfile?.displayName || user?.displayName || '');
+  const [email, setEmail] = useState(userProfile?.email || user?.email || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [governorate, setGovernorate] = useState(userProfile?.governorate || OMAN_GOVERNORATES[0]);
+  const [wilayat, setWilayat] = useState('');
   const [address, setAddress] = useState('');
-  const [notes, setNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const deliveryFee = cartTotal >= 25 || cartTotal === 0 ? 0 : 2.0;
-  const finalTotal = cartTotal + deliveryFee;
-
-  const handleConfirmOrder = (e: React.FormEvent) => {
+  const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!customerName.trim() || !phone.trim() || !address.trim()) {
+    if (!customerName.trim() || !phone.trim() || !wilayat.trim() || !address.trim()) {
       setErrorMsg(
         t(
-          'يرجى إدخال الاسم الكامل ورقم الهاتف العُماني وعنوان التوصيل قبل المتابعة.',
-          'Please enter your full name, Omani phone number, and delivery address.'
+          'يرجى إدخال الاسم الكامل، رقم الهاتف، الولاية، وعنوان التوصيل قبل المتابعة.',
+          'Please enter your full name, phone number, wilayat, and delivery address.'
         )
       );
       return;
@@ -59,42 +67,31 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
 
     setIsProcessing(true);
 
-    setTimeout(() => {
-      const orderId = `MNT-${Math.floor(100000 + Math.random() * 900000)}`;
-      const isThawani = paymentMethod === 'thawani';
-
-      const newOrder = {
-        id: orderId,
-        date: new Date().toISOString(),
+    try {
+      await placeOrder({
         customerName: customerName.trim(),
+        email: email.trim() || 'customer@montaji.om',
         phone: phone.trim(),
         governorate,
+        wilayat: wilayat.trim(),
         address: address.trim(),
-        notes: notes.trim(),
-        paymentMethod: isThawani ? 'Thawani Pay (بوابة ثواني)' : 'الدفع عند الاستلام (COD)',
-        paymentStatus: isThawani ? 'مدفوع إلكترونياً عبر ثواني' : 'يُدفع نقداً عند الاستلام',
-        status: 'قيد التجهيز',
-        items: cartItems,
-        subtotal: cartTotal,
-        deliveryFee,
-        total: finalTotal,
-      };
+        paymentMethod,
+      });
 
-      try {
-        const existingOrders = JSON.parse(localStorage.getItem('montaji_orders_v1') || '[]');
-        localStorage.setItem('montaji_orders_v1', JSON.stringify([newOrder, ...existingOrders]));
-        localStorage.setItem('montaji_last_order', JSON.stringify(newOrder));
-      } catch {
-        // تجاهل أخطاء التخزين إن وجدت
-      }
-
-      clearCart();
       setIsProcessing(false);
       onNavigate('order-confirmation.html');
-    }, 1100);
+    } catch {
+      setIsProcessing(false);
+      setErrorMsg(
+        t(
+          'حدث خطأ غير متوقع أثناء إتمام الطلب، يرجى المحاولة مرة أخرى.',
+          'An unexpected error occurred while placing your order. Please try again.'
+        )
+      );
+    }
   };
 
-  if (cartItems.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-5">
         <div className="w-20 h-20 rounded-3xl bg-[#153e4d]/10 text-[#153e4d] mx-auto flex items-center justify-center">
@@ -205,6 +202,23 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t('البريد الإلكتروني (لإرسال الفاتورة)', 'Email Address (for Receipt)')}
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute top-3 start-3.5" />
+                <input
+                  type="email"
+                  dir="ltr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm text-start focus:outline-hidden focus:border-[#1f5b70]"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -225,14 +239,14 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {t('الولاية / المنطقة / رقم المنزل *', 'Wilayat / Area / House No. *')}
+                  {t('الولاية *', 'Wilayat *')}
                 </label>
                 <input
                   type="text"
                   required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder={t('مثال: السيب - المعبيلة الجنوبية', 'e.g., Seeb - Al Maabilah')}
+                  value={wilayat}
+                  onChange={(e) => setWilayat(e.target.value)}
+                  placeholder={t('مثال: السيب، صحار، صلالة، نزوى', 'e.g., Seeb, Sohar, Salalah')}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
                 />
               </div>
@@ -240,13 +254,14 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                {t('ملاحظات إضافية للتوصيل (اختياري)', 'Delivery Notes (Optional)')}
+                {t('المنطقة / الشارع / رقم المنزل *', 'Area / Street / House No. *')}
               </label>
               <input
                 type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t('أي تعليمات لمندوب التوصيل...', 'Any instructions for courier...')}
+                required
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={t('مثال: المعبيلة الجنوبية - شارع النور - منزل 42', 'e.g., Al Maabilah South, House 42')}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
               />
             </div>
@@ -350,7 +365,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
             </h2>
 
             <div className="space-y-3 max-h-60 overflow-y-auto pe-1">
-              {cartItems.map((item) => (
+              {items.map((item) => (
                 <div
                   key={item.product.id}
                   className="flex items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800/70 pb-2.5"
@@ -381,23 +396,39 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>{t('المجموع الفرعي', 'Subtotal')}</span>
                 <span className="font-bold">
-                  {cartTotal.toFixed(3)} {t('ر.ع.', 'OMR')}
+                  {subtotal.toFixed(3)} {t('ر.ع.', 'OMR')}
                 </span>
               </div>
+
+              {discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>{t(`الخصم (${couponCode})`, `Discount (${couponCode})`)}</span>
+                  <span className="font-bold">
+                    -{discount.toFixed(3)} {t('ر.ع.', 'OMR')}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>{t('رسوم التوصيل', 'Delivery Fee')}</span>
                 <span className="font-bold text-emerald-600">
-                  {deliveryFee === 0
-                    ? t('مجاني (للطلبات فوق 25 ر.ع.)', 'Free (Orders over 25 OMR)')
-                    : `${deliveryFee.toFixed(3)} ${t('ر.ع.', 'OMR')}`}
+                  {shippingFee === 0
+                    ? t('مجاني (للطلبات فوق 30 ر.ع.)', 'Free (Orders over 30 OMR)')
+                    : `${shippingFee.toFixed(3)} ${t('ر.ع.', 'OMR')}`}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>{t('ضريبة القيمة المضافة (5%)', 'VAT (5%)')}</span>
+                <span className="font-bold">
+                  {tax.toFixed(3)} {t('ر.ع.', 'OMR')}
                 </span>
               </div>
 
               <div className="flex justify-between text-base font-black text-slate-900 dark:text-white pt-3 border-t border-slate-200 dark:border-slate-700">
                 <span>{t('الإجمالي المستحق', 'Total Amount Due')}</span>
                 <span className="text-[#153e4d] dark:text-[#dfba83] text-xl">
-                  {finalTotal.toFixed(3)} {t('ر.ع.', 'OMR')}
+                  {total.toFixed(3)} {t('ر.ع.', 'OMR')}
                 </span>
               </div>
             </div>
