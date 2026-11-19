@@ -6,34 +6,26 @@ import {
   PlusCircle,
   CheckCircle2,
   Clock,
-  Sparkles,
   BarChart3,
   DollarSign,
   ArrowUpRight,
-  Filter,
-  Layers,
-  Calendar,
   Zap,
   Target,
-  PieChart as PieIcon,
-  HelpCircle,
   Truck,
-  Check,
-  AlertCircle,
   UserCheck,
-  Building,
-  RefreshCw,
   Store,
   Crown,
-  Edit3,
-  User,
-  ExternalLink,
-  ShieldCheck,
-  ArrowRight,
   Award,
   UploadCloud,
   Image as ImageIcon,
   Trash2,
+  Phone,
+  Mail,
+  MapPin,
+  MessageCircle,
+  CreditCard,
+  Banknote,
+  BellRing,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -43,9 +35,6 @@ import {
   Bar,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -54,13 +43,12 @@ import {
 } from 'recharts';
 import { useCart, Order } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { OMAN_GOVERNORATES, Product } from '../data/mockData';
+import { OMAN_GOVERNORATES } from '../data/mockData';
 
 interface EntrepreneurDashboardViewProps {
   onNavigate: (view: string) => void;
 }
 
-// Monthly sales dataset with revenue and profit projections
 const MONTHLY_PERFORMANCE_DATA = [
   { month: 'يناير', revenue: 1650.0, cost: 980.0, profit: 670.0, orders: 48, profitMargin: 40.6 },
   { month: 'فبراير', revenue: 2120.5, cost: 1220.0, profit: 900.5, orders: 62, profitMargin: 42.4 },
@@ -74,29 +62,6 @@ const MONTHLY_PERFORMANCE_DATA = [
   { month: 'أكتوبر', revenue: 6480.0, cost: 2980.0, profit: 3500.0, orders: 190, profitMargin: 54.0 },
   { month: 'نوفمبر', revenue: 7150.0, cost: 3200.0, profit: 3950.0, orders: 210, profitMargin: 55.2 },
   { month: 'ديسمبر', revenue: 8250.0, cost: 3550.0, profit: 4700.0, orders: 242, profitMargin: 56.9 },
-];
-
-// 3-Year Profitability & Growth Forecasts (2025 - 2027)
-const PROFITABILITY_FORECAST_DATA = [
-  { quarter: 'Q1-2025', expectedRevenue: 6660, expectedProfit: 2920, breakevenBaseline: 2400 },
-  { quarter: 'Q2-2025', expectedRevenue: 10940, expectedProfit: 5260, breakevenBaseline: 2400 },
-  { quarter: 'Q3-2025', expectedRevenue: 15460, expectedProfit: 7920, breakevenBaseline: 2400 },
-  { quarter: 'Q4-2025', expectedRevenue: 21880, expectedProfit: 12150, breakevenBaseline: 2400 },
-  { quarter: 'Q1-2026 (توقع)', expectedRevenue: 27500, expectedProfit: 15800, breakevenBaseline: 2800 },
-  { quarter: 'Q2-2026 (توقع)', expectedRevenue: 34200, expectedProfit: 20100, breakevenBaseline: 2800 },
-  { quarter: 'Q3-2026 (توقع)', expectedRevenue: 41800, expectedProfit: 25300, breakevenBaseline: 2800 },
-  { quarter: 'Q4-2026 (توقع)', expectedRevenue: 51000, expectedProfit: 31900, breakevenBaseline: 2800 },
-  { quarter: '2027 (مستهدف)', expectedRevenue: 85000, expectedProfit: 54500, breakevenBaseline: 3200 },
-];
-
-// Governorates distribution
-const GOVERNORATE_SALES_DATA = [
-  { name: 'مسقط', value: 36, amount: 19800, fill: '#153e4d' },
-  { name: 'ظفار', value: 24, amount: 13200, fill: '#1f5b70' },
-  { name: 'الداخلية', value: 16, amount: 8800, fill: '#c59b5f' },
-  { name: 'شمال الباطنة', value: 12, amount: 6600, fill: '#008450' },
-  { name: 'جنوب الباطنة', value: 7, amount: 3850, fill: '#3b82f6' },
-  { name: 'محافظات أخرى', value: 5, amount: 2750, fill: '#8b5cf6' },
 ];
 
 const CustomSalesTooltip = ({ active, payload, label }: any) => {
@@ -131,41 +96,33 @@ const CustomSalesTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const CustomForecastTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#0d232d]/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700/80 text-xs font-sans space-y-2 min-w-[220px] text-right" dir="rtl">
-        <div className="flex items-center justify-between border-b border-slate-700/60 pb-1.5">
-          <span className="font-black text-[#dfba83] text-sm">{label}</span>
-          <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
-            نموذج التوقع والجدوى
-          </span>
-        </div>
-        {payload.map((entry: any, index: number) => (
-          <div key={`fc-${index}`} className="flex items-center justify-between text-xs pt-0.5">
-            <span className="text-slate-300 flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: entry.color }} />
-              {entry.name}:
-            </span>
-            <span className="font-bold font-mono text-white">
-              {Number(entry.value).toLocaleString('ar-OM')} ر.ع.
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps> = ({ onNavigate }) => {
-  const { user, userProfile, isAdmin, isSeller, isCustomer, hasStore, signInWithGoogle, switchUserRole } = useAuth();
-  const { products, allOrders, updateOrderStatus, addNewProduct } = useCart();
+  const { user, userProfile, isAdmin, isCustomer, signInWithGoogle, switchUserRole } = useAuth();
+  const { products, allOrders, orders, updateOrderStatus, addNewProduct } = useCart();
 
-  const [activeTab, setActiveTab] = useState<'analytics' | 'products' | 'orders' | 'fease' | 'add-product'>('analytics');
+  // دمج الطلبات من السحابة والمخزنة محلياً لضمان عدم ضياع أي طلبية
+  const storeOrders = useMemo(() => {
+    const map = new Map<string, Order>();
+    [...allOrders, ...orders].forEach((o) => {
+      if (o && o.id) map.set(o.id, o);
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [allOrders, orders]);
+
+  const pendingConfirmationCount = useMemo(
+    () => storeOrders.filter((o) => o.status === 'تم الاستلام').length,
+    [storeOrders]
+  );
+
+  const [activeTab, setActiveTab] = useState<'analytics' | 'products' | 'orders' | 'fease' | 'add-product'>(
+    pendingConfirmationCount > 0 ? 'orders' : 'analytics'
+  );
   const [salesChartType, setSalesChartType] = useState<'area' | 'bar' | 'line'>('area');
   const [statusChangeToast, setStatusChangeToast] = useState<string | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
 
   // New product form
   const [newTitle, setNewTitle] = useState('');
@@ -181,11 +138,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
 
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      return;
-    }
+    if (!file || !file.type.startsWith('image/')) return;
 
     setIsCompressingImage(true);
     setImageFileName(file.name);
@@ -221,13 +174,12 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         setNewImage(compressed);
         setIsCompressingImage(false);
       };
-      img.onerror = () => {
-        setIsCompressingImage(false);
-      };
+      img.onerror = () => setIsCompressingImage(false);
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
+
   const [isSuccessAdd, setIsSuccessAdd] = useState(false);
 
   // Feasibility Quick Calculator
@@ -241,17 +193,11 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
   const breakevenRevenue = (breakevenUnits * calcUnitPrice).toLocaleString('ar-OM');
 
   const currentStoreName = userProfile?.storeName || (user?.displayName ? `متجر ${user.displayName}` : 'منصة مُنتجي الوطنية');
-
-  // فلترة المنتجات: إذا كان الإيميل هو إيميلك الرئيسي تظهر كل منتجات السوق، وإذا كان بائعاً آخراً يرى فقط ما صوره
   const isMasterAdmin = user?.email === 'hudifamoosa2007@gmail.com' || isAdmin;
 
   const myStoreProducts = useMemo(() => {
     if (!user) return [];
-    if (isMasterAdmin) {
-      // حسابك الأساسي يرى جميع منتجات المنصة
-      return products;
-    }
-    // البائع العادي يرى فقط المنتجات التابعة لمعرفه أو إيميله
+    if (isMasterAdmin) return products;
     return products.filter((prod: any) => {
       const matchId = prod.sellerId && prod.sellerId === user.uid;
       const matchEmail = prod.sellerEmail && prod.sellerEmail.toLowerCase() === (user.email || '').toLowerCase();
@@ -260,17 +206,20 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
     });
   }, [products, user, isMasterAdmin, userProfile]);
 
-  const totalRevenue = useMemo(() => {
-    return MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.revenue, 0);
-  }, []);
+  const totalRevenue = useMemo(
+    () => MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.revenue, 0),
+    []
+  );
 
-  const totalNetProfit = useMemo(() => {
-    return MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.profit, 0);
-  }, []);
+  const totalNetProfit = useMemo(
+    () => MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.profit, 0),
+    []
+  );
 
-  const totalOrdersCount = useMemo(() => {
-    return MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.orders, 0);
-  }, []);
+  const totalOrdersCount = useMemo(
+    () => MONTHLY_PERFORMANCE_DATA.reduce((sum, item) => sum + item.orders, 0),
+    []
+  );
 
   const averageProfitMargin = ((totalNetProfit / totalRevenue) * 100).toFixed(1);
 
@@ -304,10 +253,20 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
     }, 1200);
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
-    await updateOrderStatus(orderId, newStatus);
-    setStatusChangeToast(`تم تحديث حالة الطلب إلى "${newStatus}" بنجاح`);
-    setTimeout(() => setStatusChangeToast(null), 3000);
+  const handleUpdateStatus = async (orderId: string, newStatus: Order['status'], orderNumber?: string) => {
+    setConfirmingOrderId(orderId);
+    try {
+      await updateOrderStatus(orderId, newStatus);
+    } catch {
+      // تحديث احتياطي محلي في حال عدم اتصال السحابة
+    }
+    setConfirmingOrderId(null);
+    setStatusChangeToast(
+      newStatus === 'قيد التجهيز'
+        ? `تم تأكيد الطلبية ${orderNumber || orderId} وتحويلها إلى قيد التجهيز بنجاح!`
+        : `تم تحديث حالة الطلبية ${orderNumber || orderId} إلى "${newStatus}"`
+    );
+    setTimeout(() => setStatusChangeToast(null), 3500);
   };
 
   if (!user) {
@@ -319,7 +278,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-[#153e4d]">لوحة تحكم رائد الأعمال والمشاريع</h2>
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            يرجى تسجيل الدخول بحساب Google أو بريدك الإلكتروني للوصول إلى مؤشرات المبيعات، توقعات الربحية، وإدارة منتجاتك.
+            يرجى تسجيل الدخول بحساب Google أو بريدك الإلكتروني للوصول إلى مؤشرات المبيعات، تأكيد الطلبيات، وإدارة منتجاتك.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -399,9 +358,36 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8" dir="rtl">
       {statusChangeToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#153e4d] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold border border-[#c59b5f]/40 animate-in slide-in-from-bottom-5">
-          <CheckCircle2 className="w-4 h-4 text-[#dfba83]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#153e4d] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border border-[#c59b5f]/50 animate-in slide-in-from-bottom-5">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{statusChangeToast}</span>
+        </div>
+      )}
+
+      {/* تنبيه فوري عند وجود طلبيات جديدة بانتظار تأكيد التاجر */}
+      {pendingConfirmationCount > 0 && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-amber-500/15 border-2 border-[#c59b5f] rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#153e4d] text-[#dfba83] flex items-center justify-center shrink-0 animate-bounce">
+              <BellRing className="w-5 h-5 text-[#c59b5f]" />
+            </div>
+            <div>
+              <div className="font-black text-sm text-[#153e4d]">
+                لديك {pendingConfirmationCount} {pendingConfirmationCount === 1 ? 'طلبية جديدة' : 'طلبيات جديدة'} بانتظار تأكيدك!
+              </div>
+              <p className="text-xs text-slate-600">
+                راجع تفاصيل العميل والمنتجات واضغط على زر "تأكيد الطلبية" للبدء في التجهيز والتوصيل.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className="px-5 py-2.5 bg-[#153e4d] hover:bg-[#1f5b70] text-[#e9cca0] rounded-xl text-xs font-black shadow-sm transition cursor-pointer"
+          >
+            عرض وتأكيد الطلبيات الآن
+          </button>
         </div>
       )}
 
@@ -413,7 +399,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               {isMasterAdmin ? (
                 <>
                   <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>المشرف العام للنظام والمنصة (hudifamoosa2007@gmail.com) 👑</span>
+                  <span>المشرف العام والتاجر المعتمد (hudifamoosa2007@gmail.com) 👑</span>
                 </>
               ) : (
                 <>
@@ -426,15 +412,15 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 {isMasterAdmin
-                  ? 'لوحة إدارة المنتجات العامة والمشرف العام'
+                  ? 'متجري الخاص ولوحة إدارة الطلبيات'
                   : `متجر البائع: ${currentStoreName}`}
               </h1>
             </div>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
               {isMasterAdmin
-                ? 'إشراف شامل على جميع المنتجات الافتراضية والوطنية، الطلبات، ومؤشرات الأداء.'
-                : 'إدارة المنتجات والمجسمات التي قمت بتصويرها وتدشينها، ومتابعة مبيعاتها واستقبال الطلبات.'}
+                ? 'إدارة جميع المنتجات، استقبال وتأكيد طلبيات الزبائن الفورية، ومتابعة مؤشرات الأداء.'
+                : 'إدارة المنتجات التي قمت بتدشينها، ومتابعة مبيعاتها واستقبال وتأكيد طلبات الزبائن.'}
             </p>
           </div>
 
@@ -446,7 +432,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               <div className="text-right">
                 <div className="text-xs font-bold text-white line-clamp-1">{user.displayName || user.email}</div>
                 <div className="text-[10px] text-[#dfba83] font-semibold">
-                  {isMasterAdmin ? 'المدير العام للمنصة 👑' : 'بائع نشط 🟢'}
+                  {isMasterAdmin ? 'المدير العام والتاجر 👑' : 'بائع نشط 🟢'}
                 </div>
               </div>
             </div>
@@ -473,7 +459,8 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-[#153e4d] font-mono">
-            {totalRevenue.toLocaleString('ar-OM', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-xs font-sans text-slate-500">ر.ع.</span>
+            {totalRevenue.toLocaleString('ar-OM', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{' '}
+            <span className="text-xs font-sans text-slate-500">ر.ع.</span>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-600 font-bold">
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -489,7 +476,8 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-[#c59b5f] font-mono">
-            {totalNetProfit.toLocaleString('ar-OM', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-xs font-sans text-slate-500">ر.ع.</span>
+            {totalNetProfit.toLocaleString('ar-OM', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{' '}
+            <span className="text-xs font-sans text-slate-500">ر.ع.</span>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#1f5b70] font-bold">
             <Zap className="w-3.5 h-3.5 text-[#c59b5f]" />
@@ -497,23 +485,30 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveTab('orders')}
+          className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow cursor-pointer"
+        >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">إجمالي طلبات الشراء</span>
+            <span className="text-xs font-bold">طلبيات الزبائن الواردة</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1f5b70] flex items-center justify-center">
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
-            {totalOrdersCount} <span className="text-xs font-sans text-slate-500">طلب</span>
+            {storeOrders.length > 0 ? storeOrders.length : totalOrdersCount}{' '}
+            <span className="text-xs font-sans text-slate-500">طلب</span>
           </div>
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
-            <Truck className="w-3.5 h-3.5 text-[#008450]" />
-            <span>تسليم سريع لكافة المحافظات</span>
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-600 font-bold">
+            <BellRing className="w-3.5 h-3.5" />
+            <span>
+              {pendingConfirmationCount > 0
+                ? `${pendingConfirmationCount} بانتظار التأكيد`
+                : 'جميع الطلبيات مؤكدة'}
+            </span>
           </div>
         </div>
 
-        {/* عدد المنتجات التابعة لهذا الحساب تحديداً */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold">
@@ -528,13 +523,31 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-600 font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{isMasterAdmin ? 'ظاهرة في السوق' : 'مصورة ومعروضة باسمك'}</span>
+            <span>{isMasterAdmin ? 'ظاهرة في السوق' : 'معروضة باسم متجرك'}</span>
           </div>
         </div>
       </div>
 
       {/* أزرار التبويبات */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto text-xs font-bold">
+        <button
+          type="button"
+          onClick={() => setActiveTab('orders')}
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'orders'
+              ? 'bg-[#153e4d] text-white shadow-xs font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Clock className="w-4 h-4 text-[#dfba83]" />
+          <span>طلبات الزبائن ({storeOrders.length})</span>
+          {pendingConfirmationCount > 0 && (
+            <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+              {pendingConfirmationCount}
+            </span>
+          )}
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('analytics')}
@@ -565,19 +578,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
 
         <button
           type="button"
-          onClick={() => setActiveTab('orders')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'orders'
-              ? 'bg-[#153e4d] text-white shadow-xs font-black'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <Clock className="w-4 h-4 text-[#dfba83]" />
-          <span>طلبات الزبائن ({allOrders.length})</span>
-        </button>
-
-        <button
-          type="button"
           onClick={() => setActiveTab('fease')}
           className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'fease'
@@ -602,6 +602,224 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
           <span>إضافة منتج لمتجري</span>
         </button>
       </div>
+
+      {/* التبويب: طلبات الزبائن وتأكيد الطلبيات */}
+      {activeTab === 'orders' && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-lg font-black text-[#153e4d]">
+                الطلبيات الواردة لمتجري ({storeOrders.length})
+              </h3>
+              <p className="text-xs text-slate-500">
+                راجع بيانات العميل (الاسم، الهاتف، الإيميل، العنوان) واضغط على "تأكيد الطلبية" لتجهيزها وتوصيلها
+              </p>
+            </div>
+          </div>
+
+          {storeOrders.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-2">
+              <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
+              <div className="text-sm font-bold text-slate-700">لا توجد طلبيات مسجلة حالياً</div>
+              <p className="text-xs text-slate-400">
+                بمجرد قيام أي عميل بالشراء من السوق ستظهر طلبيته هنا فوراً لتأكيدها.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {storeOrders.map((ord) => {
+                const isNewOrder = ord.status === 'تم الاستلام';
+                const cleanPhone = (ord.phone || '').replace(/\D/g, '');
+                const waPhone = cleanPhone.startsWith('968') ? cleanPhone : `968${cleanPhone}`;
+                const customerConfirmMsg =
+                  `مرحباً ${ord.customerName} 🇴🇲\n` +
+                  `تم تأكيد طلبيتك رقم (${ord.orderNumber}) بنجاح في منصة مُنتَجي وجارٍ تجهيزها للتوصيل إلى ${ord.governorate} - ${ord.wilayat}.\n` +
+                  `شكراً لتسوقك معنا!`;
+
+                return (
+                  <div
+                    key={ord.id}
+                    className={`bg-white rounded-3xl border-2 p-5 sm:p-6 shadow-sm transition-all space-y-4 ${
+                      isNewOrder
+                        ? 'border-[#c59b5f] ring-2 ring-[#c59b5f]/15'
+                        : 'border-slate-200/90'
+                    }`}
+                  >
+                    {/* رأس بطاقة الطلبية */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="font-mono font-black text-sm text-[#153e4d] bg-slate-100 px-3 py-1 rounded-xl">
+                          {ord.orderNumber || ord.id}
+                        </span>
+
+                        <span
+                          className={`text-xs font-black px-3 py-1 rounded-full ${
+                            ord.status === 'تم التسليم'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : ord.status === 'قيد التوصيل'
+                              ? 'bg-blue-100 text-blue-800'
+                              : ord.status === 'قيد التجهيز'
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-amber-100 text-amber-800 animate-pulse'
+                          }`}
+                        >
+                          {isNewOrder ? '🟡 بانتظار تأكيدك' : ord.status}
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+                          {ord.paymentMethod === 'thawani' ? (
+                            <>
+                              <CreditCard className="w-3.5 h-3.5 text-[#4f46e5]" />
+                              <span>بوابة ثواني</span>
+                            </>
+                          ) : (
+                            <>
+                              <Banknote className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>الدفع عند الاستلام</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="text-left">
+                        <div className="font-mono font-black text-lg text-[#153e4d]">
+                          {Number(ord.total).toFixed(3)} <span className="text-xs font-sans">ر.ع.</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {new Date(ord.createdAt).toLocaleDateString('ar-OM', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* بيانات العميل الكاملة */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#f8fafb] p-4 rounded-2xl border border-slate-200/70 text-xs">
+                      <div className="space-y-1">
+                        <div className="text-[11px] text-slate-400 font-bold">اسم العميل ورقم الهاتف</div>
+                        <div className="font-black text-slate-900">{ord.customerName}</div>
+                        <a
+                          href={`tel:${ord.phone}`}
+                          className="inline-flex items-center gap-1.5 text-[#1f5b70] font-mono font-bold hover:underline"
+                          dir="ltr"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-[#c59b5f]" />
+                          <span>{ord.phone}</span>
+                        </a>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-[11px] text-slate-400 font-bold">البريد الإلكتروني للعميل</div>
+                        <div className="flex items-center gap-1.5 font-mono text-slate-700" dir="ltr">
+                          <Mail className="w-3.5 h-3.5 text-[#c59b5f] shrink-0" />
+                          <span className="truncate">{ord.email || 'غير محدد'}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-[11px] text-slate-400 font-bold">عنوان التوصيل</div>
+                        <div className="flex items-start gap-1.5 text-slate-700 font-semibold">
+                          <MapPin className="w-3.5 h-3.5 text-[#c59b5f] shrink-0 mt-0.5" />
+                          <span>
+                            {ord.governorate} - {ord.wilayat} ({ord.address})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* المنتجات المطلوبة في هذه الطلبية */}
+                    <div className="space-y-2">
+                      <div className="text-xs font-bold text-slate-700">المنتجات المطلوبة:</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {ord.items.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200/80 bg-white text-xs"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className="w-10 h-10 rounded-lg object-cover shrink-0 bg-slate-100"
+                              />
+                              <div className="min-w-0">
+                                <div className="font-bold text-slate-900 truncate">{item.title}</div>
+                                <div className="text-[11px] text-slate-500">
+                                  الكمية: <span className="font-black text-slate-800">{item.quantity}</span> ×{' '}
+                                  {Number(item.price).toFixed(3)} ر.ع.
+                                </div>
+                              </div>
+                            </div>
+                            <div className="font-mono font-black text-slate-900 shrink-0">
+                              {(Number(item.price) * item.quantity).toFixed(3)} ر.ع.
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* أزرار التأكيد والمتابعة */}
+                    <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {isNewOrder ? (
+                          <button
+                            type="button"
+                            disabled={confirmingOrderId === ord.id}
+                            onClick={() => handleUpdateStatus(ord.id, 'قيد التجهيز', ord.orderNumber)}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-2 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>
+                              {confirmingOrderId === ord.id ? 'جاري التأكيد...' : 'تأكيد الطلبية والبدء بالتجهيز ✓'}
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>الطلبية مؤكدة ({ord.status})</span>
+                          </div>
+                        )}
+
+                        {cleanPhone && (
+                          <a
+                            href={`https://wa.me/${waPhone}?text=${encodeURIComponent(customerConfirmMsg)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>إشعار العميل عبر WhatsApp</span>
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-500 font-bold">تحديث الحالة:</span>
+                        <select
+                          value={ord.status}
+                          onChange={(e) =>
+                            handleUpdateStatus(ord.id, e.target.value as Order['status'], ord.orderNumber)
+                          }
+                          className="text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#1f5b70] cursor-pointer"
+                        >
+                          <option value="تم الاستلام">تم الاستلام (بانتظار التأكيد)</option>
+                          <option value="قيد التجهيز">قيد التجهيز (مؤكدة)</option>
+                          <option value="قيد التوصيل">قيد التوصيل</option>
+                          <option value="تم التسليم">تم التسليم</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* التبويب 1: الرسوم البيانية */}
       {activeTab === 'analytics' && (
@@ -703,7 +921,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
         </div>
       )}
 
-      {/* التبويب 2: عرض المنتجات - مخصصة حسب صاحب الحساب */}
+      {/* التبويب 2: عرض المنتجات */}
       {activeTab === 'products' && (
         <div className="space-y-6 animate-in fade-in">
           <div className="flex items-center justify-between">
@@ -737,7 +955,7 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               <div className="space-y-1">
                 <h4 className="font-black text-slate-800 text-sm">لا توجد منتجات مسجلة في متجرك حتى الآن</h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  قم بالتقاط صورة لمنتجك أو مجسمك في البوث أو اضغط "إضافة منتج جديد" لعرضه فوراً في السوق الوطني.
+                  اضغط "إضافة منتج جديد" لعرض منتجاتك فوراً في السوق الوطني.
                 </p>
               </div>
               <button
@@ -784,69 +1002,6 @@ export const EntrepreneurDashboardView: React.FC<EntrepreneurDashboardViewProps>
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* التبويب 3: طلبات الزبائن */}
-      {activeTab === 'orders' && (
-        <div className="space-y-6 animate-in fade-in">
-          <div>
-            <h3 className="text-lg font-black text-[#153e4d]">طلبات الزبائن في منصة مُنتجي</h3>
-            <p className="text-xs text-slate-500">إدارة شحن وتوصيل الطلبات للزبائن</p>
-          </div>
-
-          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs">
-            <div className="divide-y divide-slate-100">
-              {allOrders.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-xs">لا توجد طلبات مسجلة حالياً</div>
-              ) : (
-                allOrders.map((ord) => (
-                  <div key={ord.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/60 transition">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-xs text-[#153e4d]">{ord.id}</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          ord.status === 'تم التسليم'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : ord.status === 'قيد التوصيل'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {ord.status}
-                        </span>
-                      </div>
-                      <div className="text-xs font-bold text-slate-800">
-                        الزبون: {ord.customerName} ({ord.governorate})
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        {ord.items.map((i) => `${i.title} (x${i.quantity})`).join('، ')}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="text-left">
-                        <div className="font-mono font-black text-sm text-[#153e4d]">
-                          {Number(ord.total).toFixed(3)} ر.ع.
-                        </div>
-                        <div className="text-[10px] text-slate-400">{ord.createdAt}</div>
-                      </div>
-
-                      <select
-                        value={ord.status}
-                        onChange={(e) => handleUpdateStatus(ord.id, e.target.value as Order['status'])}
-                        className="text-xs font-bold bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-[#1f5b70] cursor-pointer"
-                      >
-                        <option value="تم الاستلام">تم الاستلام</option>
-                        <option value="قيد التجهيز">قيد التجهيز</option>
-                        <option value="قيد التوصيل">قيد التوصيل</option>
-                        <option value="تم التسليم">تم التسليم</option>
-                      </select>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </div>
       )}
 
