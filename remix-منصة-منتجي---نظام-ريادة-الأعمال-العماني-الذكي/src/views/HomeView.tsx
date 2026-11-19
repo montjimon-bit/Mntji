@@ -121,10 +121,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           <div className="inline-flex items-center justify-center gap-2 bg-[#c59b5f]/15 border border-[#c59b5f]/40 px-4 py-1.5 rounded-full text-xs font-semibold text-[#dfba83] shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>
-              {t(
-                'المظلة الوطنية لتمكين الابتكار العماني - رؤية عُمان 2040',
-                'National Umbrella for Omani Innovation - Oman Vision 2040'
-              )}
+
             </span>
           </div>
 
