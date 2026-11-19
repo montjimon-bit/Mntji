@@ -1,16 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  collection,
-  doc,
-  setDoc,
-  onSnapshot,
-  query,
-  where,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../services/firebase';
 import { Product, PRODUCTS_DATA } from '../data/mockData';
 import { useAuth } from './AuthContext';
 
@@ -84,130 +72,79 @@ interface CartContextType {
   deleteProduct: (productId: string) => Promise<void>;
 }
 
+const PRODUCTS_STORAGE_KEY = 'montaji_products_v1';
+const CART_STORAGE_KEY = 'montaji_cart_v1';
+const ORDERS_STORAGE_KEY = 'montaji_orders_v1';
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
-  const [products, setProducts] = useState<Product[]>(PRODUCTS_DATA);
+  // تحميل المنتجات من التخزين المحلي أو البيانات الأساسية
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // تجاهل أخطاء القراءة
+    }
+    return PRODUCTS_DATA;
+  });
 
+  // تحميل السلة من التخزين المحلي
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('montaji_cart');
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
+  // تحميل الطلبيات من التخزين المحلي
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
-      const saved = localStorage.getItem('montaji_orders');
+      const saved = localStorage.getItem(ORDERS_STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [couponCode, setCouponCode] = useState<string>('');
   const [couponDiscountPercent, setCouponDiscountPercent] = useState<number>(0);
 
-  // Sync cart to localStorage
+  // حفظ المنتجات تلقائياً عند أي إضافة أو حذف
   useEffect(() => {
     try {
-      localStorage.setItem('montaji_cart', JSON.stringify(items));
+      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
     } catch (e) {
-      console.error('Error saving cart to localStorage', e);
+      console.warn('تعذر حفظ المنتجات محلياً (ربما مساحة التخزين ممتلئة):', e);
+    }
+  }, [products]);
+
+  // حفظ السلة تلقائياً
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.warn('تعذر حفظ السلة محلياً:', e);
     }
   }, [items]);
 
-  // قراءة المنتجات والصور التي وضعتها أنت في Firebase مباشرة بدون أي تعديل أو استبدال
+  // حفظ الطلبيات تلقائياً
   useEffect(() => {
-    const productsColRef = collection(db, 'products');
-
-    const unsubscribe = onSnapshot(
-      productsColRef,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const loadedProducts = snapshot.docs.map((docSnap) => {
-            const data = docSnap.data();
-
-            return {
-              id: docSnap.id,
-              title: data.title || '',
-              description: data.description || '',
-              price: Number(data.price) || 0,
-              category: data.category || 'عام',
-              subCategory: data.subCategory || undefined,
-              governorate: data.governorate || 'محافظة مسقط',
-              seller: {
-                name: data.sellerName || data.seller?.name || 'رائد أعمال عماني',
-                isRiyadaCertified: data.isRiyadaCertified !== undefined ? Boolean(data.isRiyadaCertified) : true,
-                rating: Number(data.rating) || 4.9,
-                email: data.sellerEmail || 'hudifamoosa2007@gmail.com',
-              },
-              sellerId: data.sellerId || 'hudifamoosa2007',
-              sellerEmail: data.sellerEmail || 'hudifamoosa2007@gmail.com',
-              // الاعتماد الكلي على الرابط الموجود في قاعدة البيانات (صورتك التي عدلتها)
-              image: data.image || '',
-              stock: data.stock !== undefined ? Number(data.stock) : 15,
-              featured: Boolean(data.featured),
-            } as Product;
-          });
-          setProducts(loadedProducts);
-        } else {
-          setProducts(PRODUCTS_DATA);
-        }
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.GET, 'products');
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // الاستماع للطلبات
-  useEffect(() => {
-    if (!user) return;
-
-    if (isAdmin || user.email === 'hudifamoosa2007@gmail.com') {
-      const ordersColRef = collection(db, 'orders');
-      const unsubscribe = onSnapshot(
-        ordersColRef,
-        (snapshot) => {
-          const loadedOrders = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          })) as Order[];
-          setAllOrders(loadedOrders);
-          setOrders(loadedOrders);
-        },
-        (error) => {
-          handleFirestoreError(error, OperationType.LIST, 'orders');
-        }
-      );
-      return () => unsubscribe();
-    } else {
-      const ordersQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
-      const unsubscribe = onSnapshot(
-        ordersQuery,
-        (snapshot) => {
-          const userOrders = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          })) as Order[];
-          setOrders(userOrders);
-        },
-        (error) => {
-          handleFirestoreError(error, OperationType.LIST, 'orders');
-        }
-      );
-      return () => unsubscribe();
+    try {
+      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+    } catch (e) {
+      console.warn('تعذر حفظ الطلبيات محلياً:', e);
     }
-  }, [user, isAdmin]);
+  }, [orders]);
 
   const addToCart = (product: Product, quantity = 1) => {
     setItems((prev) => {
@@ -273,7 +210,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const discount = Number(((subtotal * couponDiscountPercent) / 100).toFixed(3));
   const discountedSubtotal = Math.max(0, subtotal - discount);
-  const shippingFee = items.length === 0 ? 0 : discountedSubtotal >= 30 ? 0 : 2.0;
+  const shippingFee = items.length === 0 ? 0 : discountedSubtotal >= 25 ? 0 : 2.0;
   const tax = Number((discountedSubtotal * 0.05).toFixed(3));
   const total = Number((discountedSubtotal + shippingFee + tax).toFixed(3));
 
@@ -309,78 +246,49 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'تم الاستلام',
     };
 
-    try {
-      await setDoc(doc(db, 'orders', orderId), {
-        ...newOrder,
-        timestamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.warn('Saving to local orders fallback:', error);
-    }
-
     setOrders((prev) => [newOrder, ...prev]);
     setLastOrder(newOrder);
-
-    try {
-      const existingSaved = JSON.parse(localStorage.getItem('montaji_orders') || '[]');
-      localStorage.setItem('montaji_orders', JSON.stringify([newOrder, ...existingSaved]));
-    } catch (e) {
-      console.error(e);
-    }
-
     clearCart();
     return newOrder;
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    try {
-      const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { status: newStatus });
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
-      setAllOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `orders/${orderId}`);
-    }
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
   };
 
   const addNewProduct = async (productData: Omit<Product, 'id'>) => {
     const newId = `prod-${Date.now()}`;
-    const productRef = doc(db, 'products', newId);
-    try {
-      await setDoc(productRef, {
-        id: newId,
-        title: productData.title,
-        description: productData.description,
-        price: productData.price,
-        category: productData.category,
-        governorate: productData.governorate,
-        sellerName: productData.seller.name,
-        sellerId: productData.sellerId || user?.uid || 'guest-seller',
-        sellerEmail: productData.sellerEmail || user?.email || '',
-        isRiyadaCertified: productData.seller.isRiyadaCertified,
+
+    const createdProduct: Product = {
+      id: newId,
+      title: productData.title,
+      description: productData.description,
+      price: Number(productData.price) || 0,
+      category: productData.category,
+      subCategory: productData.subCategory,
+      governorate: productData.governorate,
+      seller: {
+        name: productData.seller.name,
+        isRiyadaCertified: Boolean(productData.seller.isRiyadaCertified),
         rating: 5.0,
-        image: productData.image,
-        stock: productData.stock,
-        featured: Boolean(productData.featured),
-        createdAt: serverTimestamp(),
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, `products/${newId}`);
-    }
+        email: productData.sellerEmail || user?.email || 'hudifamoosa2007@gmail.com',
+      },
+      sellerId: productData.sellerId || user?.uid || 'hudifamoosa2007',
+      sellerEmail: productData.sellerEmail || user?.email || 'hudifamoosa2007@gmail.com',
+      image:
+        productData.image ||
+        'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80',
+      stock: Number(productData.stock) || 20,
+      featured: Boolean(productData.featured),
+    };
+
+    setProducts((prev) => [createdProduct, ...prev]);
   };
 
   const deleteProduct = async (productId: string) => {
-    try {
-      const productRef = doc(db, 'products', productId);
-      await deleteDoc(productRef);
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `products/${productId}`);
-    }
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
   return (
@@ -403,7 +311,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         applyCoupon,
         removeCoupon,
         orders,
-        allOrders,
+        allOrders: orders,
         lastOrder,
         placeOrder,
         updateOrderStatus,
