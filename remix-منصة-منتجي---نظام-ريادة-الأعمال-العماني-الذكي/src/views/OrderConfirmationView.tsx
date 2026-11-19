@@ -14,7 +14,6 @@ interface OrderConfirmationViewProps {
   onNavigate: (view: string) => void;
 }
 
-const ADMIN_MERCHANT_EMAIL = 'hudifamoosa2007@gmail.com';
 const SECONDARY_EMAIL = 'montjimon@gmail.com';
 const MERCHANT_WHATSAPP = '96894842840';
 
