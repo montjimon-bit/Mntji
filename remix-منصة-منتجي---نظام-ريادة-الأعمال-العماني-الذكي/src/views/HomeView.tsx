@@ -27,7 +27,7 @@ interface HomeViewProps {
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
 
-// مكوّن العداد الرقمي المتحرك
+// مكوّن العداد الرقمي السريع
 const AnimatedStatCounter: React.FC<{
   target: number;
   prefix?: string;
@@ -45,7 +45,7 @@ const AnimatedStatCounter: React.FC<{
           setStarted(true);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
@@ -54,14 +54,18 @@ const AnimatedStatCounter: React.FC<{
   useEffect(() => {
     if (!started) return;
     let startTime: number | null = null;
-    const duration = 1400;
+    const duration = 450; // سريع جداً (0.45 ثانية)
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const easeOut = 1 - Math.pow(1 - progress, 2);
       setCount(target * easeOut);
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setCount(target);
+      }
     };
 
     requestAnimationFrame(animate);
@@ -87,7 +91,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const { lang, t } = useLanguage();
 
   const ArrowIcon = lang === 'ar' ? ArrowLeft : ArrowRight;
-
   const [addedToast, setAddedToast] = useState<string | null>(null);
 
   const featuredProducts = PRODUCTS_DATA.slice(0, 4);
@@ -233,7 +236,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 3. العدادات الرقمية المتحركة */}
+      {/* 3. العدادات الرقمية المتحركة السريعة */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 sm:p-10 shadow-md border border-slate-200/80 dark:border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           <div className="space-y-1.5 border-e border-slate-100 dark:border-slate-800">
