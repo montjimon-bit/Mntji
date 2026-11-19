@@ -1,30 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ShoppingBag,
-  Award,
   BookOpen,
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  Building2,
-  Zap,
   Instagram,
   Phone,
   MessageCircle,
   CreditCard,
   Heart,
-  Layers,
   Star,
-  ChevronDown,
-  Sparkles,
-  Store,
-  TrendingUp,
 } from 'lucide-react';
 import {
   PRODUCTS_DATA,
-  TRAINING_COURSES_DATA,
-  SUCCESS_STORIES_DATA,
   OMAN_GOVERNORATES,
 } from '../data/mockData';
 import { useCart } from '../context/CartContext';
@@ -37,7 +27,7 @@ interface HomeViewProps {
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
 
-// مكوّن العداد الرقمي المتحرك مثل موقع ثواني
+// مكوّن العداد الرقمي المتحرك
 const AnimatedStatCounter: React.FC<{
   target: number;
   prefix?: string;
@@ -99,12 +89,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const ArrowIcon = lang === 'ar' ? ArrowLeft : ArrowRight;
 
   const [addedToast, setAddedToast] = useState<string | null>(null);
-  const [activeFeatureTab, setActiveFeatureTab] = useState<'market' | 'courses' | 'sellers'>('market');
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const featuredProducts = PRODUCTS_DATA.slice(0, 4);
-  const featuredCourses = TRAINING_COURSES_DATA.slice(0, 3);
-  const spotlightStory = SUCCESS_STORIES_DATA[0];
 
   const handleQuickAdd = (product: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,91 +98,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     setAddedToast(product.title);
     setTimeout(() => setAddedToast(null), 2500);
   };
-
-  // بيانات التبويبات التفاعلية (على نمط ثواني)
-  const interactiveTabs = {
-    market: {
-      badge: t('سوق المنتجات العُمانية', 'Omani Products Marketplace'),
-      title: t('تسوّق من أجود المشاريع العُمانية المعتمدة في مكان واحد', 'Shop Certified Omani Ventures in One Place'),
-      desc: t(
-        'من اللبان الحوجري الظفاري وعسل الجبل الأخضر إلى الحلوى العُمانية والمشغولات الفضية، مع إمكانية تصفح متجر كل تاجر وتقييمه مباشرة.',
-        'From Dhofari Hojari frankincense and Jabal Akhdar honey to Omani Halwa and silverware, with direct store browsing and ratings.'
-      ),
-      bullets: [
-        t('شحن وتوصيل لجميع محافظات السلطنة الـ 11', 'Delivery across all 11 Governorates of Oman'),
-        t('شارة توثيق لحاملي بطاقة ريادة', 'Verified badge for Riyada card holders'),
-        t('دفع مرن عبر المحافظ الرقمية أو عند الاستلام', 'Flexible digital wallet or Cash on Delivery'),
-      ],
-      ctaText: t('استكشف سوق المنتجات الآن', 'Explore Marketplace Now'),
-      ctaRoute: 'marketplace.html',
-      previewProduct: featuredProducts[0],
-    },
-    courses: {
-      badge: t('أكاديمية مُنتَجي للتدريب', 'Montaji Training Academy'),
-      title: t('طوّر مهاراتك في التجارة الإلكترونية وإدارة المشاريع', 'Master E-Commerce & Business Management'),
-      desc: t(
-        'برامج تدريبية وورش عملية يقدمها نخبة من المختصين في عُمان لتأهيل رواد الأعمال وأصحاب المشاريع المنزلية والصغيرة.',
-        'Practical workshops led by Omani specialists to empower entrepreneurs and home-based businesses.'
-      ),
-      bullets: [
-        t('دورات مجانية ومعتمدة برعاية ريادة', 'Free certified courses sponsored by Riyada'),
-        t('تدريب عملي على التسويق والتسعير والتراخيص', 'Hands-on training in marketing, pricing & licensing'),
-        t('شهادات إتمام فورية للمشاركين', 'Instant completion certificates for participants'),
-      ],
-      ctaText: t('تصفح الدورات التدريبية', 'Browse Training Courses'),
-      ctaRoute: 'training-courses.html',
-      previewProduct: featuredProducts[1],
-    },
-    sellers: {
-      badge: t('بوابة التاجر ورائد الأعمال', 'Merchant & Entrepreneur Portal'),
-      title: t('افتح متجرك الرقمي وأدر منتجاتك ومبيعاتك بذكاء', 'Launch Your Digital Store & Manage Sales'),
-      desc: t(
-        'سجّل كبائع في منصة مُنتَجي واحصل على لوحة تحكم متكاملة لإضافة منتجاتك، متابعة طلباتك، والاستفادة من دراسة الجدوى الذكية.',
-        'Register as a seller on Montaji to manage products, track orders, and access smart feasibility studies.'
-      ),
-      bullets: [
-        t('صفحة متجر خاصة باسم مشروعك وتقييمك', 'Dedicated store page with your brand & ratings'),
-        t('أدوات دراسة الجدوى وحساب نقطة التعادل بالريال العُماني', 'OMR feasibility study & break-even calculators'),
-        t('وصول مباشر لآلاف المشترين في السلطنة', 'Direct reach to thousands of buyers across Oman'),
-      ],
-      ctaText: t('ابدأ البيع في مُنتَجي', 'Start Selling on Montaji'),
-      ctaRoute: 'register.html',
-      previewProduct: featuredProducts[2],
-    },
-  };
-
-  const currentTab = interactiveTabs[activeFeatureTab];
-
-  const faqs = [
-    {
-      q: t('كيف يمكنني الشراء من سوق منصة مُنتَجي؟', 'How can I shop on Montaji Marketplace?'),
-      a: t(
-        'اختر المنتج الذي يعجبك من السوق، اضغط على "أضف للسلة"، ثم انتقل للسلة لإتمام الطلب واختيار وسيلة الدفع المناسبة لك سواء بالبطاقة أو عند الاستلام.',
-        'Select any product from the marketplace, click Add to Cart, and proceed to checkout with card or Cash on Delivery.'
-      ),
-    },
-    {
-      q: t('كيف أعرض منتجاتي كبائع في المنصة؟', 'How do I list my products as a seller?'),
-      a: t(
-        'اضغط على "دخول / تسجيل" في الأعلى، اختر نوع الحساب "بائع"، وسيُفتح لك فوراً قسم "متجري الخاص" لإضافة منتجاتك وصورها وأسعارها بالريال العُماني.',
-        'Click Sign In / Register at the top, select Seller account, and your private store dashboard will unlock immediately.'
-      ),
-    },
-    {
-      q: t('هل الدورات التدريبية متاحة للجميع؟', 'Are training courses open to everyone?'),
-      a: t(
-        'نعم، جميع الزوار والعملاء ورواد الأعمال يمكنهم تصفح الدورات التدريبية وحجز مقاعدهم مباشرة من قسم الدورات التدريبية.',
-        'Yes, all visitors, customers, and entrepreneurs can browse and enroll in training courses directly.'
-      ),
-    },
-    {
-      q: t('ما هي وسائل الدفع والتوصيل المتوفرة في عُمان؟', 'What payment and delivery options are available in Oman?'),
-      a: t(
-        'نوفر التوصيل لكافة محافظات سلطنة عُمان الـ 11، مع دعم الدفع عند الاستلام، Apple Pay، Google Pay، Samsung Pay، ومحفظة ثواني.',
-        'We deliver to all 11 Governorates of Oman with Cash on Delivery, Apple Pay, Google Pay, Samsung Pay, and Thawani.'
-      ),
-    },
-  ];
 
   return (
     <div className="space-y-16 pb-16 overflow-x-hidden">
@@ -208,9 +109,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* 1. قسم الهيرو التفاعلي المتوازن */}
+      {/* 1. قسم الهيرو */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#122e3a] via-[#153e4d] to-[#0f242e] text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8 border-b border-[#1f5b70]/40">
-        {/* إضاءات خلفية متحركة بنعومة */}
         <div className="absolute -top-20 start-1/4 w-96 h-96 bg-[#1f5b70]/40 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-20 end-1/4 w-96 h-96 bg-[#c59b5f]/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
 
@@ -240,7 +140,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             )}
           </p>
 
-          {/* الأزرار الرئيسية التفاعلية */}
+          {/* الأزرار الرئيسية */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <button
               onClick={() => onNavigate('marketplace.html')}
@@ -259,7 +159,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             </button>
           </div>
 
-          {/* شريط المحافظات العُمانية التفاعلي */}
+          {/* شريط المحافظات العُمانية */}
           <div className="pt-6">
             <div className="text-[11px] text-slate-400 mb-2.5 font-semibold">
               {t('نصل إلى رواد الأعمال والمشترين في كافة محافظات السلطنة:', 'Connecting entrepreneurs & buyers across Oman:')}
@@ -333,7 +233,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 3. العدادات الرقمية المتحركة (Animated Counters على نمط ثواني) */}
+      {/* 3. العدادات الرقمية المتحركة */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 sm:p-10 shadow-md border border-slate-200/80 dark:border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           <div className="space-y-1.5 border-e border-slate-100 dark:border-slate-800">
@@ -374,134 +274,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 4. قسم التبويبات التفاعلية الذكية (Interactive Feature Tabs مثل ثواني) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 shadow-lg space-y-8">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c59b5f] bg-[#c59b5f]/10 px-3.5 py-1 rounded-full">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{t('اكتشف تجربة مُنتَجي التفاعلية', 'Explore Interactive Montaji')}</span>
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white">
-              {t('منظومة متكاملة تلبي احتياجاتك', 'An Ecosystem Built Around Your Needs')}
-            </h2>
-
-            {/* أزرار التبديل التفاعلية */}
-            <div className="inline-flex flex-wrap justify-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 mt-3">
-              <button
-                type="button"
-                onClick={() => setActiveFeatureTab('market')}
-                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeFeatureTab === 'market'
-                    ? 'bg-[#153e4d] text-[#e9cca0] shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                }`}
-              >
-                <ShoppingBag className="w-4 h-4 text-[#c59b5f]" />
-                <span>{t('سوق المنتجات', 'Marketplace')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveFeatureTab('courses')}
-                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeFeatureTab === 'courses'
-                    ? 'bg-[#153e4d] text-[#e9cca0] shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                }`}
-              >
-                <BookOpen className="w-4 h-4 text-[#c59b5f]" />
-                <span>{t('الدورات التدريبية', 'Training Courses')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveFeatureTab('sellers')}
-                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeFeatureTab === 'sellers'
-                    ? 'bg-[#153e4d] text-[#e9cca0] shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                }`}
-              >
-                <Store className="w-4 h-4 text-[#c59b5f]" />
-                <span>{t('بوابة التاجر', 'Seller Portal')}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* محتوى التبويب المختار مع حركة ناعمة */}
-          <div
-            key={activeFeatureTab}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#f8fafb] dark:bg-[#153e4d]/25 rounded-3xl p-6 sm:p-8 border border-slate-200/70 dark:border-slate-800 animate-in fade-in duration-300"
-          >
-            <div className="lg:col-span-7 space-y-4 text-start">
-              <span className="inline-block text-xs font-bold text-[#1f5b70] dark:text-[#dfba83] bg-[#1f5b70]/10 px-3 py-1 rounded-lg">
-                {currentTab.badge}
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-snug">
-                {currentTab.title}
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                {currentTab.desc}
-              </p>
-
-              <ul className="space-y-2.5 pt-1">
-                {currentTab.bullets.map((b, idx) => (
-                  <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-3">
-                <button
-                  type="button"
-                  onClick={() => onNavigate(currentTab.ctaRoute)}
-                  className="px-6 py-3 bg-[#153e4d] hover:bg-[#1f5b70] text-[#e9cca0] rounded-xl text-xs sm:text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <span>{currentTab.ctaText}</span>
-                  <ArrowIcon className="w-4 h-4 text-[#c59b5f]" />
-                </button>
-              </div>
-            </div>
-
-            {/* بطاقة معاينة حية تفاعلية */}
-            <div className="lg:col-span-5">
-              <div
-                onClick={() => onNavigate(currentTab.ctaRoute)}
-                className="bg-white dark:bg-[#0d232d] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group"
-              >
-                <div className="aspect-16/10 overflow-hidden bg-slate-100 relative">
-                  <img
-                    src={currentTab.previewProduct.image}
-                    alt={currentTab.previewProduct.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <span className="absolute top-3 start-3 bg-[#153e4d]/90 text-[#e9cca0] text-[11px] font-bold px-3 py-1 rounded-lg">
-                    {currentTab.previewProduct.governorate}
-                  </span>
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      {currentTab.previewProduct.title}
-                    </div>
-                    <div className="text-[11px] text-[#c59b5f] font-semibold mt-0.5">
-                      {currentTab.previewProduct.seller.name}
-                    </div>
-                  </div>
-                  <div className="text-sm font-black text-[#153e4d] dark:text-[#dfba83] shrink-0">
-                    {currentTab.previewProduct.price.toFixed(3)} {t('ر.ع.', 'OMR')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. المنتجات العُمانية المميزة */}
+      {/* 4. المنتجات العُمانية المميزة */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
           <div>
@@ -606,84 +379,32 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 6. قسم الأسئلة الشائعة التفاعلي (Interactive FAQ Accordion مثل ثواني) */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-[#0d232d] rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
-          <div className="text-center space-y-1.5">
-            <span className="text-xs font-bold text-[#c59b5f]">
-              {t('إجابات سريعة وواضحة', 'Quick & Clear Answers')}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {t('الأسئلة الشائعة', 'Frequently Asked Questions')}
-            </h2>
-          </div>
-
-          <div className="space-y-3">
-            {faqs.map((item, index) => {
-              const isOpen = openFaqIndex === index;
-              return (
-                <div
-                  key={index}
-                  className={`rounded-2xl border transition-all ${
-                    isOpen
-                      ? 'bg-[#f4f8fa] dark:bg-[#153e4d]/40 border-[#1f5b70]/40'
-                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-800'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                    className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-start cursor-pointer"
-                  >
-                    <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-                      {item.q}
-                    </span>
-                    <ChevronDown
-                      className={`w-5 h-5 text-[#1f5b70] dark:text-[#dfba83] shrink-0 transition-transform duration-300 ${
-                        isOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/50 dark:border-slate-700/50 pt-3 animate-in fade-in duration-200">
-                      {item.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. شريط وسائل الدفع المعتمدة */}
+      {/* 5. شريط وسيلة الدفع المعتمدة: بوابة ثواني فقط */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-gradient-to-r from-slate-900 via-[#153e4d] to-slate-900 rounded-3xl p-6 sm:p-8 text-white flex flex-wrap items-center justify-between gap-6 border border-[#1f5b70]/50 shadow-xl">
-          <div className="space-y-1 max-w-md">
+          <div className="space-y-1.5 max-w-xl">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-[#dfba83]">
               <CreditCard className="w-4 h-4 text-[#c59b5f]" />
-              <span>{t('دفع رقمي آمن 100% في سلطنة عمان', '100% Secure Digital Payments in Oman')}</span>
+              <span>{t('بوابة الدفع الرسمية المعتمدة في منصة مُنتَجي', 'Official Payment Gateway on Montaji')}</span>
             </div>
-            <h3 className="text-xl font-black">
+            <h3 className="text-xl sm:text-2xl font-black">
               {t(
-                'ادفع بسهولة عبر Apple Pay و Google Pay و Samsung Pay',
-                'Pay Easily via Apple Pay, Google Pay & Samsung Pay'
+                'ادفع بأمان وسرعة عبر بوابة ثواني (Thawani Pay)',
+                'Pay Safely & Instantly via Thawani Pay'
               )}
             </h3>
+            <p className="text-xs text-slate-300">
+              {t(
+                'معاملات إلكترونية مشفرة ومعتمدة في سلطنة عُمان لحماية حقوق المشتري والتاجر.',
+                'Encrypted digital transactions licensed in Oman protecting both buyers and sellers.'
+              )}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-black px-4 py-2 rounded-xl text-xs font-bold text-white border border-slate-700 hover:scale-105 transition">
-              Apple Pay
-            </div>
-            <div className="bg-white text-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:scale-105 transition">
-              Google Pay
-            </div>
-            <div className="bg-[#1428a0] text-white px-4 py-2 rounded-xl text-xs font-bold hover:scale-105 transition">
-              Samsung Pay
-            </div>
-            <div className="bg-[#4f46e5] text-white px-3.5 py-2 rounded-xl text-xs font-bold hover:scale-105 transition">
-              {t('ثواني Thawani', 'Thawani')}
+          <div className="flex items-center gap-3">
+            <div className="bg-[#4f46e5] text-white px-6 py-3.5 rounded-2xl text-sm font-black shadow-lg border border-indigo-400/40 flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-[#dfba83]" />
+              <span>{t('بوابة ثواني | Thawani Pay', 'Thawani Pay Gateway')}</span>
             </div>
           </div>
         </div>
