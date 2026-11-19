@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   MapPin,
   Phone,
@@ -8,8 +8,6 @@ import {
   ShieldCheck,
   CreditCard,
   Building2,
-  Copy,
-  Check,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
@@ -25,21 +23,8 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { lang, t } = useLanguage();
-  const [copiedField, setCopiedField] = useState<'email' | 'phone' | null>(null);
 
   const LinkArrow = lang === 'ar' ? ChevronLeft : ChevronRight;
-
-  const handleCopy = async (value: string, field: 'email' | 'phone', e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      // تجاهل في حال عدم دعم الحافظة
-    }
-  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -160,11 +145,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <span>{t('سلطنة عمان - مسقط', 'Sultanate of Oman - Muscat')}</span>
               </li>
 
-              {/* ايميل منتجي مع زر نسخ فوري */}
-              <li className="flex items-center justify-between gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-2.5 py-1.5 transition-all">
+              <li>
                 <a
                   href="mailto:montjimon@gmail.com"
-                  className="flex items-center gap-2 text-slate-200 hover:text-[#dfba83] transition truncate"
+                  className="flex items-center gap-2 text-slate-200 hover:text-[#dfba83] transition bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-2.5 py-1.5"
                 >
                   <Mail className="w-3.5 h-3.5 text-[#c59b5f] shrink-0" />
                   <span className="truncate">
@@ -174,43 +158,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     </span>
                   </span>
                 </a>
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy('montjimon@gmail.com', 'email', e)}
-                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-[#dfba83] transition cursor-pointer shrink-0"
-                  title={t('نسخ الإيميل', 'Copy Email')}
-                >
-                  {copiedField === 'email' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
               </li>
 
-              {/* رقم الهاتف مع زر نسخ فوري */}
-              <li className="flex items-center justify-between gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-2.5 py-1.5 transition-all">
+              <li>
                 <a
                   href="tel:+96894842840"
-                  className="flex items-center gap-2 text-slate-200 hover:text-[#dfba83] transition"
+                  className="flex items-center gap-2 text-slate-200 hover:text-[#dfba83] transition bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-2.5 py-1.5"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#c59b5f] shrink-0" />
                   <span dir="ltr" className="font-mono">
                     +968 9484 2840
                   </span>
                 </a>
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy('+96894842840', 'phone', e)}
-                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-[#dfba83] transition cursor-pointer shrink-0"
-                  title={t('نسخ الرقم', 'Copy Phone')}
-                >
-                  {copiedField === 'phone' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
               </li>
 
               {/* أزرار سريعة لواتساب وانستجرام */}
