@@ -1,0 +1,21 @@
+{
+  "short_name": "منتجي",
+  "name": "منصة منتجي - نظام ريادة الأعمال والمشاريع العمانية",
+  "description": "المنصة الوطنية المتكاملة لتمكين رواد الأعمال وأصحاب المشاريع العمانية، مستشار الذكاء الاصطناعي لدراسات الجدوى وسوق تجاري عماني شامل.",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#153e4d",
+  "theme_color": "#153e4d",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["business", "shopping", "finance", "productivity"]
+}
