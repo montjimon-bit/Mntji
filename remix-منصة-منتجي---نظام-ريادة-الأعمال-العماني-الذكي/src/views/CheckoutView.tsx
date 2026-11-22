@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Sparkles,
   Banknote,
+  AlertCircle,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,14 @@ import { OMAN_GOVERNORATES } from '../data/mockData';
 
 interface CheckoutViewProps {
   onNavigate: (view: string) => void;
+}
+
+interface FieldErrors {
+  customerName?: string;
+  phone?: string;
+  email?: string;
+  wilayat?: string;
+  address?: string;
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
@@ -49,17 +58,86 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
   const [wilayat, setWilayat] = useState('');
   const [address, setAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // تنظيف رقم الهاتف العُماني والتحقق منه (8 أرقام تبدأ بـ 7 أو 9)
+  const normalizeOmaniPhone = (raw: string): string => {
+    let digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('00968')) digits = digits.slice(5);
+    else if (digits.startsWith('968')) digits = digits.slice(3);
+    return digits;
+  };
+
+  const handlePhoneChange = (val: string) => {
+    // السماح بالأرقام فقط بحد أقصى 8 خانات
+    const cleaned = normalizeOmaniPhone(val).slice(0, 8);
+    setPhone(cleaned);
+    if (fieldErrors.phone) {
+      setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: FieldErrors = {};
+
+    // 1. التحقق من الاسم الكامل (حرفان على الأقل واسم ثنائي)
+    const cleanName = customerName.trim();
+    if (!cleanName) {
+      errors.customerName = t('يرجى إدخال الاسم الكامل.', 'Please enter your full name.');
+    } else if (cleanName.length < 4 || cleanName.split(/\s+/).length < 2) {
+      errors.customerName = t(
+        'يرجى إدخال الاسم الثنائي على الأقل (الاسم والقبيلة).',
+        'Please enter at least first and last name.'
+      );
+    }
+
+    // 2. التحقق من رقم الهاتف العُماني (8 أرقام ويبدأ بـ 7 أو 9)
+    const cleanPhone = normalizeOmaniPhone(phone);
+    if (!cleanPhone) {
+      errors.phone = t('يرجى إدخال رقم الهاتف العُماني.', 'Please enter your Omani phone number.');
+    } else if (!/^[79]\d{7}$/.test(cleanPhone)) {
+      errors.phone = t(
+        'يجب أن يتكون رقم الهاتف العُماني من 8 أرقام ويبدأ بـ 9 أو 7 (مثال: 94842840).',
+        'Omani phone number must be 8 digits starting with 9 or 7 (e.g. 94842840).'
+      );
+    }
+
+    // 3. التحقق من صيغة البريد الإلكتروني (اختياري لكن يجب أن يكون صحيحاً إذا أُدخل)
+    const cleanEmail = email.trim();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+      errors.email = t(
+        'صيغة البريد الإلكتروني غير صحيحة (مثال: name@gmail.com).',
+        'Invalid email format (e.g. name@gmail.com).'
+      );
+    }
+
+    // 4. التحقق من الولاية
+    if (!wilayat.trim() || wilayat.trim().length < 2) {
+      errors.wilayat = t('يرجى كتابة اسم الولاية بشكل صحيح.', 'Please enter a valid wilayat name.');
+    }
+
+    // 5. التحقق من عنوان التوصيل التفصيلي
+    if (!address.trim() || address.trim().length < 5) {
+      errors.address = t(
+        'يرجى كتابة المنطقة أو الشارع أو أقرب معلم لتسهيل التوصيل.',
+        'Please enter area, street, or nearest landmark (min 5 characters).'
+      );
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
+    setGeneralError(null);
 
-    if (!customerName.trim() || !phone.trim() || !wilayat.trim() || !address.trim()) {
-      setErrorMsg(
+    if (!validateForm()) {
+      setGeneralError(
         t(
-          'يرجى إدخال الاسم الكامل، رقم الهاتف، الولاية، وعنوان التوصيل قبل المتابعة.',
-          'Please enter your full name, phone number, wilayat, and delivery address.'
+          'يرجى تصحيح الحقول المحددة باللون الأحمر قبل إتمام الطلب.',
+          'Please fix the highlighted fields before completing your order.'
         )
       );
       return;
@@ -71,7 +149,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
       await placeOrder({
         customerName: customerName.trim(),
         email: email.trim() || 'customer@montaji.om',
-        phone: phone.trim(),
+        phone: normalizeOmaniPhone(phone),
         governorate,
         wilayat: wilayat.trim(),
         address: address.trim(),
@@ -82,7 +160,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
       onNavigate('order-confirmation.html');
     } catch {
       setIsProcessing(false);
-      setErrorMsg(
+      setGeneralError(
         t(
           'حدث خطأ غير متوقع أثناء إتمام الطلب، يرجى المحاولة مرة أخرى.',
           'An unexpected error occurred while placing your order. Please try again.'
@@ -149,7 +227,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      <form onSubmit={handleConfirmOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <form onSubmit={handleConfirmOrder} noValidate className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* العمود الأيمن: بيانات التوصيل + اختيار وسيلة الدفع */}
         <div className="lg:col-span-7 space-y-6">
           {/* 1. بيانات التوصيل */}
@@ -159,49 +237,75 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
               <span>{t('بيانات المستلم وعنوان التوصيل', 'Recipient & Delivery Details')}</span>
             </h2>
 
-            {errorMsg && (
-              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">
-                {errorMsg}
+            {generalError && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{generalError}</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* الاسم الكامل */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {t('الاسم الكامل *', 'Full Name *')}
+                  {t('الاسم الكامل (الثنائي) *', 'Full Name *')}
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute top-3 start-3.5" />
                   <input
                     type="text"
-                    required
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder={t('أدخل اسمك الكامل', 'Enter full name')}
-                    className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      if (fieldErrors.customerName) {
+                        setFieldErrors((prev) => ({ ...prev, customerName: undefined }));
+                      }
+                    }}
+                    placeholder={t('مثال: حذيفة موسى الشيلي', 'e.g., Huthifa Moosa')}
+                    className={`w-full ps-10 pe-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden ${
+                      fieldErrors.customerName
+                        ? 'border-rose-500 focus:border-rose-500'
+                        : 'border-slate-200 dark:border-slate-700 focus:border-[#1f5b70]'
+                    }`}
                   />
                 </div>
+                {fieldErrors.customerName && (
+                  <p className="text-[11px] text-rose-600 font-bold mt-1">{fieldErrors.customerName}</p>
+                )}
               </div>
 
+              {/* رقم الهاتف العُماني */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {t('رقم الهاتف العُماني *', 'Omani Phone Number *')}
+                  {t('رقم الهاتف العُماني (8 أرقام) *', 'Omani Phone (8 digits) *')}
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute top-3 start-3.5" />
                   <input
                     type="tel"
-                    required
+                    inputMode="numeric"
+                    maxLength={8}
                     dir="ltr"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder="9XXXXXXX"
-                    className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm text-start focus:outline-hidden focus:border-[#1f5b70]"
+                    className={`w-full ps-10 pe-14 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/70 text-sm text-start font-mono focus:outline-hidden ${
+                      fieldErrors.phone
+                        ? 'border-rose-500 focus:border-rose-500'
+                        : 'border-slate-200 dark:border-slate-700 focus:border-[#1f5b70]'
+                    }`}
                   />
+                  <span className="absolute top-2.5 end-3 text-[11px] font-mono font-bold text-slate-400">
+                    +968
+                  </span>
                 </div>
+                {fieldErrors.phone && (
+                  <p className="text-[11px] text-rose-600 font-bold mt-1">{fieldErrors.phone}</p>
+                )}
               </div>
             </div>
 
+            {/* البريد الإلكتروني */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {t('البريد الإلكتروني (لإرسال الفاتورة)', 'Email Address (for Receipt)')}
@@ -212,14 +316,27 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
                   type="email"
                   dir="ltr"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (fieldErrors.email) {
+                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                    }
+                  }}
                   placeholder="name@example.com"
-                  className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm text-start focus:outline-hidden focus:border-[#1f5b70]"
+                  className={`w-full ps-10 pe-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/70 text-sm text-start focus:outline-hidden ${
+                    fieldErrors.email
+                      ? 'border-rose-500 focus:border-rose-500'
+                      : 'border-slate-200 dark:border-slate-700 focus:border-[#1f5b70]'
+                  }`}
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="text-[11px] text-rose-600 font-bold mt-1">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* المحافظة */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {t('المحافظة *', 'Governorate *')}
@@ -237,33 +354,57 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
                 </select>
               </div>
 
+              {/* الولاية */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {t('الولاية *', 'Wilayat *')}
                 </label>
                 <input
                   type="text"
-                  required
                   value={wilayat}
-                  onChange={(e) => setWilayat(e.target.value)}
+                  onChange={(e) => {
+                    setWilayat(e.target.value);
+                    if (fieldErrors.wilayat) {
+                      setFieldErrors((prev) => ({ ...prev, wilayat: undefined }));
+                    }
+                  }}
                   placeholder={t('مثال: السيب، صحار، صلالة، نزوى', 'e.g., Seeb, Sohar, Salalah')}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden ${
+                    fieldErrors.wilayat
+                      ? 'border-rose-500 focus:border-rose-500'
+                      : 'border-slate-200 dark:border-slate-700 focus:border-[#1f5b70]'
+                  }`}
                 />
+                {fieldErrors.wilayat && (
+                  <p className="text-[11px] text-rose-600 font-bold mt-1">{fieldErrors.wilayat}</p>
+                )}
               </div>
             </div>
 
+            {/* العنوان التفصيلي */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {t('المنطقة / الشارع / رقم المنزل *', 'Area / Street / House No. *')}
               </label>
               <input
                 type="text"
-                required
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  if (fieldErrors.address) {
+                    setFieldErrors((prev) => ({ ...prev, address: undefined }));
+                  }
+                }}
                 placeholder={t('مثال: المعبيلة الجنوبية - شارع النور - منزل 42', 'e.g., Al Maabilah South, House 42')}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden focus:border-[#1f5b70]"
+                className={`w-full px-3.5 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/70 text-sm focus:outline-hidden ${
+                  fieldErrors.address
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700 focus:border-[#1f5b70]'
+                }`}
               />
+              {fieldErrors.address && (
+                <p className="text-[11px] text-rose-600 font-bold mt-1">{fieldErrors.address}</p>
+              )}
             </div>
           </div>
 
@@ -413,7 +554,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({ onNavigate }) => {
                 <span>{t('رسوم التوصيل', 'Delivery Fee')}</span>
                 <span className="font-bold text-emerald-600">
                   {shippingFee === 0
-                    ? t('مجاني (للطلبات فوق 30 ر.ع.)', 'Free (Orders over 30 OMR)')
+                    ? t('مجاني (للطلبات فوق 25 ر.ع.)', 'Free (Orders over 25 OMR)')
                     : `${shippingFee.toFixed(3)} ${t('ر.ع.', 'OMR')}`}
                 </span>
               </div>
